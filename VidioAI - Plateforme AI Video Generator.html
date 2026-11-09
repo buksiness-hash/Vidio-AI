@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="fr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VidioAI — Plateforme de Génération Vidéo par Intelligence Artificielle</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            black: '#050505',
+                            red: '#FF1010',
+                            redHover: '#D90A0A',
+                            darkGrip: '#171717',
+                            graySub: '#999999',
+                            border: '#262626'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #050505;
+            color: #ffffff;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .red-glow {
+            box-shadow: 0 0 35px rgba(255, 16, 16, 0.25);
+        }
+        .red-glow-subtle {
+            box-shadow: 0 0 15px rgba(255, 16, 16, 0.15);
+        }
+        .glass-card {
+            background: rgba(23, 23, 23, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .aspect-16-9 { aspect-ratio: 16 / 9; }
+        .aspect-9-16 { aspect-ratio: 9 / 16; }
+        .aspect-1-1 { aspect-ratio: 1 / 1; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-brand-red selection:text-white">
+
+    <!-- HEADER / NAVIGATION -->
+    <header class="sticky top-0 z-40 w-full glass-card border-b border-brand-border px-4 lg:px-8 py-3 flex items-center justify-between">
+        <!-- LOGO BRAND -->
+        <div class="flex items-center space-x-6 cursor-pointer select-none" onclick="switchView('landing')">
+            <div class="flex items-center space-x-3">
+                <svg width="34" height="34" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M15 20 C 35 20, 45 80, 55 80 C 65 80, 80 30, 90 35" stroke="#FF1010" stroke-width="16" stroke-linecap="round" stroke-linejoin="round"/>
+                    <polygon points="62,40 62,65 82,52.5" fill="#FFFFFF"/>
+                </svg>
+                <span class="text-xl font-black tracking-wider text-white">Vidio<span class="text-brand-red">AI</span></span>
+            </div>
+            
+            <!-- DESKTOP NAV -->
+            <nav class="hidden md:flex items-center space-x-6 text-xs font-semibold text-brand-graySub">
+                <button type="button" onclick="switchView('generator')" class="hover:text-white transition-colors cursor-pointer">Studio Générateur</button>
+                <button type="button" onclick="switchView('my-creations')" class="hover:text-white transition-colors cursor-pointer">Mes Créations</button>
+                <button type="button" onclick="switchView('gallery')" class="hover:text-white transition-colors cursor-pointer">Galerie IA</button>
+                <button type="button" onclick="switchView('pricing')" class="hover:text-white transition-colors cursor-pointer">Abonnements</button>
+            </nav>
+        </div>
+
+        <!-- ACTIONS AUTHENTIFICATION & PROFIL -->
+        <div class="flex items-center space-x-3">
+            <!-- État Déconnecté -->
+            <div id="user-menu-guest" class="flex items-center space-x-3">
+                <button type="button" onclick="openAuthModal('login')" class="text-xs font-semibold px-4 py-2 rounded-xl text-white hover:text-brand-red transition-colors cursor-pointer">
+                    Connexion
+                </button>
+                <button type="button" onclick="openAuthModal('register')" class="text-xs font-bold px-4 py-2 rounded-xl bg-brand-red hover:bg-brand-redHover text-white red-glow-subtle transition-all cursor-pointer">
+                    S'inscrire
+                </button>
+            </div>
+
+            <!-- État Connecté -->
+            <div id="user-menu-logged" class="hidden items-center space-x-3">
+                <div class="flex items-center space-x-2 bg-brand-darkGrip px-3 py-1.5 rounded-full border border-brand-border">
+                    <i class="fa-solid fa-bolt text-brand-red text-xs"></i>
+                    <span id="user-credits-display" class="text-xs font-bold text-white">50 Crédits</span>
+                </div>
+
+                <div class="relative">
+                    <button type="button" onclick="toggleUserDropdown()" class="w-9 h-9 rounded-full bg-brand-red text-white font-bold text-xs flex items-center justify-center border border-white/20 cursor-pointer">
+                        <span id="user-avatar-initials">US</span>
+                    </button>
+                    <!-- DROPDOWN -->
+                    <div id="user-dropdown" class="hidden absolute right-0 mt-2 w-56 glass-card rounded-2xl border border-brand-border shadow-2xl py-2 z-50">
+                        <div class="px-4 py-3 border-b border-brand-border">
+                            <p id="dropdown-user-name" class="text-sm font-bold text-white">Utilisateur VidioAI</p>
+                            <p id="dropdown-user-email" class="text-xs text-brand-graySub truncate">user@vidioai.com</p>
+                        </div>
+                        <button type="button" onclick="switchView('generator'); hideUserDropdown();" class="w-full text-left px-4 py-2.5 text-xs text-white hover:bg-brand-red/10 flex items-center space-x-2 cursor-pointer">
+                            <i class="fa-solid fa-wand-magic-sparkles text-brand-red"></i>
+                            <span>Studio Générateur</span>
+                        </button>
+                        <button type="button" onclick="switchView('my-creations'); hideUserDropdown();" class="w-full text-left px-4 py-2.5 text-xs text-white hover:bg-brand-red/10 flex items-center space-x-2 cursor-pointer">
+                            <i class="fa-solid fa-folder-open text-brand-red"></i>
+                            <span>Mes Créations</span>
+                        </button>
+                        <button type="button" onclick="switchView('dashboard'); hideUserDropdown();" class="w-full text-left px-4 py-2.5 text-xs text-white hover:bg-brand-red/10 flex items-center space-x-2 cursor-pointer">
+                            <i class="fa-solid fa-key text-brand-red"></i>
+                            <span>Clés API / Mon Profil</span>
+                        </button>
+                        <div class="border-t border-brand-border my-1"></div>
+                        <button type="button" onclick="handleLogout()" class="w-full text-left px-4 py-2.5 text-xs text-red-400 hover:bg-brand-red/10 flex items-center space-x-2 cursor-pointer">
+                            <i class="fa-solid fa-right-from-bracket"></i>
+                            <span>Déconnexion</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- MENU MOBILE BURGER -->
+            <button type="button" onclick="toggleMobileMenu()" class="md:hidden text-white p-2 text-lg cursor-pointer">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- MENU MOBILE -->
+    <div id="mobile-menu" class="hidden md:hidden glass-card border-b border-brand-border px-4 py-3 space-y-2 z-30">
+        <button type="button" onclick="switchView('generator'); toggleMobileMenu();" class="w-full text-left py-2 text-sm text-white font-medium flex items-center space-x-3 cursor-pointer">
+            <i class="fa-solid fa-wand-magic-sparkles text-brand-red"></i>
+            <span>Studio Générateur</span>
+        </button>
+        <button type="button" onclick="switchView('my-creations'); toggleMobileMenu();" class="w-full text-left py-2 text-sm text-white font-medium flex items-center space-x-3 cursor-pointer">
+            <i class="fa-solid fa-folder-open text-brand-red"></i>
+            <span>Mes Créations</span>
+        </button>
+        <button type="button" onclick="switchView('gallery'); toggleMobileMenu();" class="w-full text-left py-2 text-sm text-white font-medium flex items-center space-x-3 cursor-pointer">
+            <i class="fa-solid fa-photo-film text-brand-red"></i>
+            <span>Galerie d'Exemples</span>
+        </button>
+        <button type="button" onclick="switchView('dashboard'); toggleMobileMenu();" class="w-full text-left py-2 text-sm text-white font-medium flex items-center space-x-3 cursor-pointer">
+            <i class="fa-solid fa-sliders text-brand-red"></i>
+            <span>Paramètres & Clés API</span>
+        </button>
+    </div>
+
+    <!-- CONTENU PRINCIPAL -->
+    <main class="flex-grow max-w-7xl w-full mx-auto p-4 md:p-8 space-y-8">
+
+        <!-- VUE 1 : LANDING PAGE -->
+        <section id="view-landing" class="space-y-12">
+            <div class="text-center max-w-3xl mx-auto space-y-6 pt-8">
+                <div class="inline-flex items-center space-x-2 bg-brand-red/10 border border-brand-red/30 px-4 py-1.5 rounded-full text-xs font-bold text-brand-red">
+                    <i class="fa-solid fa-sparkles"></i>
+                    <span>Intelligence Artificielle Générative Vidéo</span>
+                </div>
+                <h1 class="text-3xl md:text-5xl font-black tracking-tight text-white leading-tight">
+                    Transformez vos idées en <span class="text-brand-red">vidéos réalistes</span> grâce à l'IA.
+                </h1>
+                <p class="text-sm md:text-base text-brand-graySub max-w-xl mx-auto leading-relaxed">
+                    Créez des vidéos haute définition en quelques secondes à partir d'un simple texte ou d'une image.
+                </p>
+                <div class="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+                    <button type="button" onclick="switchView('generator')" class="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-brand-red hover:bg-brand-redHover text-white text-sm font-bold red-glow transition-all flex items-center justify-center space-x-2 cursor-pointer">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        <span>Commencer à créer</span>
+                    </button>
+                    <button type="button" onclick="switchView('gallery')" class="w-full sm:w-auto px-8 py-3.5 rounded-2xl bg-brand-darkGrip border border-brand-border hover:border-brand-graySub text-white text-sm font-semibold transition-all cursor-pointer">
+                        Voir les démos
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- VUE 2 : STUDIO GÉNÉRATEUR -->
+        <section id="view-generator" class="hidden grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <!-- COLONNE CONTRÔLES -->
+            <div class="lg:col-span-5 space-y-6">
+                <div class="glass-card rounded-3xl p-6 border border-brand-border space-y-5">
+                    
+                    <!-- MODE SELECTOR -->
+                    <div class="grid grid-cols-2 gap-2 bg-brand-black p-1.5 rounded-xl border border-brand-border">
+                        <button type="button" id="mode-btn-text" onclick="setMode('text')" class="py-2 text-xs font-bold rounded-lg bg-brand-red text-white transition-all cursor-pointer">
+                            <i class="fa-solid fa-font mr-1"></i> Texte vers Vidéo
+                        </button>
+                        <button type="button" id="mode-btn-image" onclick="setMode('image')" class="py-2 text-xs font-bold rounded-lg text-brand-graySub hover:text-white transition-all cursor-pointer">
+                            <i class="fa-solid fa-image mr-1"></i> Image vers Vidéo
+                        </button>
+                    </div>
+
+                    <!-- TEXT PROMPT INPUT -->
+                    <div id="input-container-text" class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <label class="text-xs font-bold text-white flex items-center space-x-1">
+                                <span>Description de la vidéo</span>
+                            </label>
+                            <button type="button" onclick="improvePromptWithAI()" class="text-[11px] font-semibold text-brand-red hover:underline flex items-center space-x-1 cursor-pointer">
+                                <i class="fa-solid fa-wand-sparkles"></i>
+                                <span>Améliorer avec IA</span>
+                            </button>
+                        </div>
+                        <textarea id="prompt-input" rows="4" class="w-full bg-brand-black border border-brand-border rounded-2xl p-3.5 text-xs text-white placeholder-brand-graySub focus:outline-none focus:border-brand-red transition-all resize-none" placeholder="Un joueur de football dribble plusieurs adversaires dans un grand stade rempli de supporters et marque un magnifique but. Vidéo cinématographique réaliste."></textarea>
+                    </div>
+
+                    <!-- IMAGE UPLOAD INPUT -->
+                    <div id="input-container-image" class="hidden space-y-2">
+                        <label class="text-xs font-bold text-white">Importer votre image source</label>
+                        <div class="border-2 border-dashed border-brand-border hover:border-brand-red rounded-2xl p-4 text-center cursor-pointer transition-all bg-brand-black relative" onclick="document.getElementById('image-upload-input').click()">
+                            <input type="file" id="image-upload-input" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
+                            <div id="image-preview-container" class="hidden space-y-2">
+                                <img id="image-preview" src="" class="max-h-40 mx-auto rounded-lg object-contain">
+                                <button type="button" onclick="event.stopPropagation(); removeUploadedImage();" class="text-[11px] text-brand-red font-bold underline cursor-pointer">Supprimer l'image</button>
+                            </div>
+                            <div id="image-placeholder" class="space-y-2">
+                                <i class="fa-solid fa-cloud-arrow-up text-2xl text-brand-red"></i>
+                                <p class="text-xs font-semibold text-white">Cliquez pour importer une photo</p>
+                                <p class="text-[10px] text-brand-graySub">PNG, JPG ou WEBP jusqu'à 10 Mo</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- FORMATS (ASPECT RATIO) -->
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold text-white">Format d'affichage</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <button type="button" id="ratio-16-9" onclick="setAspectRatio('16:9')" class="py-2 text-xs font-semibold rounded-lg bg-brand-red border border-brand-red text-white flex items-center justify-center space-x-1.5 cursor-pointer">
+                                <i class="fa-solid fa-desktop text-[10px]"></i>
+                                <span>16:9</span>
+                            </button>
+                            <button type="button" id="ratio-9-16" onclick="setAspectRatio('9:16')" class="py-2 text-xs font-semibold rounded-lg bg-brand-black border border-brand-border text-brand-graySub flex items-center justify-center space-x-1.5 cursor-pointer">
+                                <i class="fa-solid fa-mobile-screen text-[10px]"></i>
+                                <span>9:16</span>
+                            </button>
+                            <button type="button" id="ratio-1-1" onclick="setAspectRatio('1:1')" class="py-2 text-xs font-semibold rounded-lg bg-brand-black border border-brand-border text-brand-graySub flex items-center justify-center space-x-1.5 cursor-pointer">
+                                <i class="fa-solid fa-square text-[10px]"></i>
+                                <span>1:1</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- DURÉE DE LA VIDÉO -->
+                    <div class="space-y-2">
+                        <label class="text-xs font-bold text-white">Durée de la vidéo</label>
+                        <div class="grid grid-cols-4 gap-2">
+                            <button type="button" id="dur-5" onclick="setDuration(5)" class="py-2 text-xs font-semibold rounded-lg bg-brand-red text-white cursor-pointer">5s</button>
+                            <button type="button" id="dur-10" onclick="setDuration(10)" class="py-2 text-xs font-semibold rounded-lg bg-brand-black border border-brand-border text-brand-graySub cursor-pointer">10s</button>
+                            <button type="button" id="dur-15" onclick="setDuration(15)" class="py-2 text-xs font-semibold rounded-lg bg-brand-black border border-brand-border text-brand-graySub cursor-pointer">15s</button>
+                            <button type="button" id="dur-30" onclick="setDuration(30)" class="py-2 text-xs font-semibold rounded-lg bg-brand-black border border-brand-border text-brand-graySub cursor-pointer">30s</button>
+                        </div>
+                    </div>
+
+                    <!-- BOUTON GÉNÉRER -->
+                    <button type="button" onclick="startVideoGeneration()" class="w-full py-4 rounded-2xl bg-brand-red hover:bg-brand-redHover text-white font-black text-sm red-glow transition-all flex items-center justify-center space-x-2 cursor-pointer">
+                        <i class="fa-solid fa-play"></i>
+                        <span>GÉNÉRER LA VIDÉO (5 CRÉDITS)</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- COLONNE PRÉVISUALISATION ET RENDU -->
+            <div class="lg:col-span-7">
+                <div class="glass-card rounded-3xl p-6 border border-brand-border h-full flex flex-col justify-between space-y-6">
+                    <div class="flex items-center justify-between border-b border-brand-border pb-4">
+                        <h3 class="text-sm font-bold text-white flex items-center space-x-2">
+                            <i class="fa-solid fa-display text-brand-red"></i>
+                            <span>Écran de Rendu IA</span>
+                        </h3>
+                        <span id="generation-status-tag" class="text-[10px] font-semibold px-2.5 py-1 rounded-full bg-brand-darkGrip text-brand-graySub border border-brand-border">
+                            En attente
+                        </span>
+                    </div>
+
+                    <!-- CANVAS DE RENDU / SIMULATION -->
+                    <div id="preview-screen-container" class="relative w-full aspect-16-9 bg-black rounded-2xl overflow-hidden border border-brand-border flex items-center justify-center">
+                        <!-- IDLE STATE -->
+                        <div id="state-idle" class="text-center p-6 space-y-3">
+                            <div class="w-16 h-16 rounded-full bg-brand-darkGrip flex items-center justify-center mx-auto border border-brand-border text-brand-graySub">
+                                <i class="fa-solid fa-film text-2xl"></i>
+                            </div>
+                            <p class="text-xs text-brand-graySub">Saisissez votre prompt et lancez la génération pour voir le résultat en direct.</p>
+                        </div>
+
+                        <!-- GENERATING STATE -->
+                        <div id="state-generating" class="hidden text-center p-6 space-y-4 w-full max-w-sm">
+                            <div class="w-12 h-12 border-4 border-brand-red border-t-transparent rounded-full animate-spin mx-auto"></div>
+                            <div class="space-y-1">
+                                <p class="text-xs font-bold text-white">Génération vidéo en cours...</p>
+                                <p id="generation-progress-text" class="text-[11px] text-brand-graySub">Connexion aux supercalculateurs IA...</p>
+                            </div>
+                            <div class="w-full bg-brand-darkGrip h-2 rounded-full overflow-hidden border border-brand-border">
+                                <div id="generation-progress-bar" class="bg-brand-red h-full w-0 transition-all duration-300"></div>
+                            </div>
+                        </div>
+
+                        <!-- RESULT STATE (CANVAS VIDÉO REAL-TIME) -->
+                        <div id="state-result" class="hidden w-full h-full relative">
+                            <canvas id="simulated-video-canvas" class="w-full h-full object-cover"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- ACTIONS SUR LA VIDÉO GÉNÉRÉE -->
+                    <div class="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-brand-border">
+                        <button type="button" onclick="switchView('my-creations')" class="text-xs font-semibold text-brand-graySub hover:text-white flex items-center space-x-1.5 cursor-pointer">
+                            <i class="fa-solid fa-folder"></i>
+                            <span>Voir toutes mes créations</span>
+                        </button>
+                        <button type="button" id="btn-agrandir-preview" onclick="openVideoPlayerModal(currentGeneratedVideoObj)" class="px-4 py-2.5 rounded-xl bg-brand-darkGrip border border-brand-border text-white text-xs font-bold hover:border-brand-red flex items-center space-x-2 transition-transform active:scale-95 cursor-pointer">
+                            <i class="fa-solid fa-expand"></i>
+                            <span>Agrandir / Lire</span>
+                        </button>
+                        <button type="button" id="btn-telecharger-preview" onclick="triggerPhoneDownload()" class="px-5 py-2.5 rounded-xl bg-brand-red text-white text-xs font-bold hover:bg-brand-redHover transition-all flex items-center space-x-2 active:scale-95 cursor-pointer">
+                            <i class="fa-solid fa-download"></i>
+                            <span>Installer / Enregistrer sur Téléphone</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- VUE 3 : MES CRÉATIONS (GALERIE UTILISATEUR) -->
+        <section id="view-my-creations" class="hidden space-y-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-xl font-bold text-white">Mes Créations Vidéo</h2>
+                    <p class="text-xs text-brand-graySub">Consultez et téléchargez toutes vos vidéos sauvegardées</p>
+                </div>
+                <button type="button" onclick="switchView('generator')" class="px-4 py-2 rounded-xl bg-brand-red text-white text-xs font-bold flex items-center space-x-2 cursor-pointer">
+                    <i class="fa-solid fa-plus"></i>
+                    <span>Nouvelle Vidéo</span>
+                </button>
+            </div>
+
+            <!-- GRILLE DES CRÉATIONS -->
+            <div id="my-creations-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <!-- Les cartes sont injectées dynamiquement par JS -->
+            </div>
+
+            <div id="my-creations-empty" class="text-center py-16 space-y-4 glass-card rounded-3xl border border-brand-border">
+                <i class="fa-solid fa-video-slash text-4xl text-brand-graySub"></i>
+                <p class="text-sm text-brand-graySub font-medium">Vous n'avez pas encore généré de vidéo.</p>
+                <button type="button" onclick="switchView('generator')" class="px-6 py-2.5 bg-brand-red text-white text-xs font-bold rounded-xl cursor-pointer">
+                    Créer votre première vidéo
+                </button>
+            </div>
+        </section>
+
+        <!-- VUE 4 : GALERIE D'EXEMPLES -->
+        <section id="view-gallery" class="hidden space-y-6">
+            <div>
+                <h2 class="text-xl font-bold text-white">Galerie d'Exemples IA</h2>
+                <p class="text-xs text-brand-graySub">Découvrez les possibilités des modèles de génération VidioAI</p>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="glass-card rounded-2xl border border-brand-border overflow-hidden p-4 space-y-3">
+                    <div class="aspect-16-9 bg-neutral-900 rounded-xl overflow-hidden relative flex items-center justify-center">
+                        <i class="fa-solid fa-circle-play text-4xl text-brand-red"></i>
+                    </div>
+                    <p class="text-xs font-bold text-white">Un cyber-samouraï sous une pluie néon futuriste à Tokyo.</p>
+                    <span class="text-[10px] bg-brand-darkGrip px-2 py-1 rounded text-brand-graySub border border-brand-border">Cinématographique • 16:9</span>
+                </div>
+                <div class="glass-card rounded-2xl border border-brand-border overflow-hidden p-4 space-y-3">
+                    <div class="aspect-16-9 bg-neutral-900 rounded-xl overflow-hidden relative flex items-center justify-center">
+                        <i class="fa-solid fa-circle-play text-4xl text-brand-red"></i>
+                    </div>
+                    <p class="text-xs font-bold text-white">Un aigle en vol plané au-dessus de montagnes enneigées au soleil couchant.</p>
+                    <span class="text-[10px] bg-brand-darkGrip px-2 py-1 rounded text-brand-graySub border border-brand-border">Réaliste • 16:9</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- VUE 5 : ABONNEMENTS & CRÉDITS -->
+        <section id="view-pricing" class="hidden space-y-8 max-w-4xl mx-auto">
+            <div class="text-center space-y-2">
+                <h2 class="text-2xl font-black text-white">Choisissez votre offre de Crédits</h2>
+                <p class="text-xs text-brand-graySub">Générez des vidéos sans limite avec nos packs rechargeables</p>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- PACK DÉCOUVERTE -->
+                <div class="glass-card rounded-3xl p-6 border border-brand-border space-y-4 text-center">
+                    <h3 class="text-sm font-bold text-white">Pack Découverte</h3>
+                    <p class="text-3xl font-black text-white">100 <span class="text-xs text-brand-graySub font-normal">crédits</span></p>
+                    <p class="text-xs text-brand-graySub">~ 20 vidéos générées</p>
+                    <button type="button" onclick="showToast('Option de recharge bientôt disponible !', 'info')" class="w-full py-2.5 rounded-xl bg-brand-darkGrip border border-brand-border text-white text-xs font-bold hover:border-brand-red cursor-pointer">Sélectionner</button>
+                </div>
+                <!-- PACK PRO -->
+                <div class="glass-card rounded-3xl p-6 border-2 border-brand-red space-y-4 text-center relative red-glow-subtle">
+                    <span class="absolute -top-3 left-1/2 -translate-x-1/2 bg-brand-red text-white text-[10px] font-black px-3 py-0.5 rounded-full uppercase">Populaire</span>
+                    <h3 class="text-sm font-bold text-white">Pack Créateur</h3>
+                    <p class="text-3xl font-black text-white">500 <span class="text-xs text-brand-graySub font-normal">crédits</span></p>
+                    <p class="text-xs text-brand-graySub">~ 100 vidéos générées</p>
+                    <button type="button" onclick="showToast('Option de recharge bientôt disponible !', 'info')" class="w-full py-2.5 rounded-xl bg-brand-red text-white text-xs font-bold hover:bg-brand-redHover cursor-pointer">Sélectionner</button>
+                </div>
+                <!-- PACK STUDIO -->
+                <div class="glass-card rounded-3xl p-6 border border-brand-border space-y-4 text-center">
+                    <h3 class="text-sm font-bold text-white">Pack Studio</h3>
+                    <p class="text-3xl font-black text-white">2000 <span class="text-xs text-brand-graySub font-normal">crédits</span></p>
+                    <p class="text-xs text-brand-graySub">Générations illimitées</p>
+                    <button type="button" onclick="showToast('Option de recharge bientôt disponible !', 'info')" class="w-full py-2.5 rounded-xl bg-brand-darkGrip border border-brand-border text-white text-xs font-bold hover:border-brand-red cursor-pointer">Sélectionner</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- VUE 6 : DASHBOARD / PARAMÈTRES ET CLÉS API -->
+        <section id="view-dashboard" class="hidden space-y-6 max-w-3xl mx-auto">
+            <div class="glass-card rounded-3xl p-6 border border-brand-border space-y-6">
+                <div class="flex items-center space-x-4 border-b border-brand-border pb-4">
+                    <div class="w-12 h-12 rounded-full bg-brand-red text-white font-black text-lg flex items-center justify-center">
+                        <span id="dash-avatar">US</span>
+                    </div>
+                    <div>
+                        <h2 id="dash-user-name" class="text-base font-bold text-white">Mon Profil</h2>
+                        <p id="dash-user-email" class="text-xs text-brand-graySub">user@vidioai.com</p>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <h3 class="text-sm font-bold text-white flex items-center space-x-2">
+                        <i class="fa-solid fa-key text-brand-red"></i>
+                        <span>Configuration des Clés API (Fournisseurs Video)</span>
+                    </h3>
+                    <div class="space-y-3 bg-brand-black p-4 rounded-2xl border border-brand-border">
+                        <div class="space-y-1">
+                            <label class="text-[11px] font-semibold text-brand-graySub">Clé API Luma Labs (Dream Machine)</label>
+                            <input type="password" id="setting-luma-key" class="w-full bg-brand-darkGrip border border-brand-border rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-brand-red" placeholder="luma-xxxx-xxxx-xxxx">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[11px] font-semibold text-brand-graySub">Clé API Replicate / Kling / Fal.ai</label>
+                            <input type="password" id="setting-replicate-key" class="w-full bg-brand-darkGrip border border-brand-border rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-brand-red" placeholder="r8_xxxx-xxxx-xxxx">
+                        </div>
+                        <button type="button" onclick="saveApiKeysConfig()" class="px-4 py-2 rounded-xl bg-brand-red text-white text-xs font-bold hover:bg-brand-redHover transition-all cursor-pointer">
+                            Enregistrer mes clés API
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- MODAL LECTEUR VIDÉO GRAND ÉCRAN -->
+    <div id="video-player-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md">
+        <div class="glass-card border border-brand-border rounded-3xl p-4 sm:p-6 max-w-2xl w-full space-y-4 relative">
+            <button type="button" onclick="closeVideoPlayerModal()" class="absolute top-4 right-4 text-brand-graySub hover:text-white text-xl z-20 cursor-pointer">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <div class="space-y-1">
+                <h3 id="modal-video-title" class="text-base font-bold text-white truncate pr-8">Prévisualisation Vidéo</h3>
+                <p id="modal-video-info" class="text-xs text-brand-graySub"></p>
+            </div>
+            <!-- LECTEUR DE VIDÉO LISIBLE SUR SMARTPHONE -->
+            <div class="aspect-16-9 bg-black rounded-2xl overflow-hidden border border-brand-border relative flex items-center justify-center">
+                <canvas id="modal-animated-canvas" class="w-full h-full object-contain"></canvas>
+            </div>
+            <div class="flex items-center justify-between pt-2">
+                <button type="button" id="modal-download-btn" onclick="" class="w-full py-3 rounded-xl bg-brand-red hover:bg-brand-redHover text-white text-xs font-bold flex items-center justify-center space-x-2 cursor-pointer">
+                    <i class="fa-solid fa-download"></i>
+                    <span>Enregistrer dans la Galerie du Téléphone</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer class="w-full glass-card border-t border-brand-border px-4 py-6 text-center text-xs text-brand-graySub space-y-2">
+        <p>© 2026 VidioAI. Tous droits réservés.</p>
+        <div class="flex justify-center space-x-4 text-[11px]">
+            <a href="#" class="hover:text-white">Confidentialité</a>
+            <a href="#" class="hover:text-white">Conditions d'utilisation</a>
+            <a href="#" class="hover:text-white">Support API</a>
+        </div>
+    </footer>
+
+    <!-- MODAL AUTHENTIFICATION -->
+    <div id="auth-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+        <div class="glass-card border border-brand-border rounded-3xl p-6 max-w-sm w-full space-y-4 relative">
+            <button type="button" onclick="closeAuthModal()" class="absolute top-4 right-4 text-brand-graySub hover:text-white text-lg cursor-pointer">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            
+            <div class="text-center space-y-1">
+                <h3 id="auth-modal-title" class="text-xl font-black text-white">Connexion</h3>
+                <p id="auth-modal-subtitle" class="text-xs text-brand-graySub">Accédez à votre studio de création VidioAI</p>
+            </div>
+
+            <div class="space-y-3">
+                <div id="name-field-container" class="hidden space-y-1">
+                    <label class="text-[11px] font-semibold text-brand-graySub">Nom d'utilisateur</label>
+                    <input type="text" id="auth-name" class="w-full bg-brand-black border border-brand-border rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-brand-red" placeholder="Votre nom">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-[11px] font-semibold text-brand-graySub">Adresse E-mail</label>
+                    <input type="email" id="auth-email" class="w-full bg-brand-black border border-brand-border rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-brand-red" placeholder="nom@exemple.com" value="user@vidioai.com">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-[11px] font-semibold text-brand-graySub">Mot de passe</label>
+                    <input type="password" id="auth-password" class="w-full bg-brand-black border border-brand-border rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-brand-red" placeholder="••••••••" value="12345678">
+                </div>
+
+                <button type="button" id="auth-submit-btn" onclick="executeAuthAction()" class="w-full py-3 rounded-xl bg-brand-red hover:bg-brand-redHover text-white text-xs font-bold red-glow-subtle transition-all mt-2 cursor-pointer">
+                    Se Connecter
+                </button>
+            </div>
+
+            <div class="text-center pt-2 border-t border-brand-border">
+                <button type="button" id="auth-switch-btn" onclick="toggleAuthMode()" class="text-xs text-brand-graySub hover:text-white font-medium cursor-pointer">
+                    Vous n'avez pas de compte ? <span class="text-brand-red font-bold">S'inscrire</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- NOTIFICATION TOAST MOBILE -->
+    <div id="toast" class="fixed bottom-4 right-4 z-50 transform translate-x-full opacity-0 transition-all duration-300 pointer-events-none">
+        <div class="glass-card border border-brand-border px-4 py-3 rounded-2xl flex items-center space-x-3 shadow-2xl">
+            <span id="toast-icon"></span>
+            <p id="toast-message" class="text-xs font-semibold text-white"></p>
+        </div>
+    </div>
+
+    <!-- SCRIPT APPLICATION -->
+    <script>
+        let lumaApiKey = localStorage.getItem('vidioai_luma_key') || "";
+        let replicateApiKey = localStorage.getItem('vidioai_replicate_key') || "";
+        let currentUser = JSON.parse(localStorage.getItem('vidioai_user')) || null;
+        let myVideosList = JSON.parse(localStorage.getItem('vidioai_saved_videos')) || [];
+        
+        let authMode = 'login';
+        let selectedAspectRatio = '16:9';
+        let selectedDuration = 5;
+        let selectedMode = 'text';
+        let uploadedImageBase64 = null;
+        let currentGeneratedVideoObj = null;
+        let modalAnimationId = null;
+
+        window.addEventListener('DOMContentLoaded', function() {
+            if (currentUser && currentUser.email) {
+                const userSavedLumaKey = localStorage.getItem(`vidioai_luma_key_${currentUser.email}`);
+                const userSavedRepKey = localStorage.getItem(`vidioai_replicate_key_${currentUser.email}`);
+                if (userSavedLumaKey) lumaApiKey = userSavedLumaKey;
+                if (userSavedRepKey) replicateApiKey = userSavedRepKey;
+            }
+
+            updateUserUI();
+            renderMyCreationsGallery();
+            
+            const lumaInput = document.getElementById('setting-luma-key');
+            const repInput = document.getElementById('setting-replicate-key');
+            if (lumaInput) lumaInput.value = lumaApiKey;
+            if (repInput) repInput.value = replicateApiKey;
+        });
+
+        function switchView(viewId) {
+            const views = ['landing', 'generator', 'my-creations', 'gallery', 'pricing', 'dashboard'];
+            views.forEach(v => {
+                const elem = document.getElementById('view-' + v);
+                if (elem) {
+                    if (v === viewId) {
+                        elem.classList.remove('hidden');
+                    } else {
+                        elem.classList.add('hidden');
+                    }
+                }
+            });
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function openAuthModal(mode) {
+            authMode = mode;
+            const modal = document.getElementById('auth-modal');
+            const title = document.getElementById('auth-modal-title');
+            const subtitle = document.getElementById('auth-modal-subtitle');
+            const submitBtn = document.getElementById('auth-submit-btn');
+            const switchBtn = document.getElementById('auth-switch-btn');
+            const nameContainer = document.getElementById('name-field-container');
+
+            if (mode === 'register') {
+                title.innerText = "Créer un compte";
+                subtitle.innerText = "Rejoignez VidioAI et recevez 50 crédits gratuits";
+                submitBtn.innerText = "S'inscrire";
+                switchBtn.innerHTML = `Déjà un compte ? <span class="text-brand-red font-bold">Se connecter</span>`;
+                nameContainer.classList.remove('hidden');
+            } else {
+                title.innerText = "Connexion";
+                subtitle.innerText = "Accédez à votre studio de création VidioAI";
+                submitBtn.innerText = "Se Connecter";
+                switchBtn.innerHTML = `Vous n'avez pas de compte ? <span class="text-brand-red font-bold">S'inscrire</span>`;
+                nameContainer.classList.add('hidden');
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        function closeAuthModal() {
+            const modal = document.getElementById('auth-modal');
+            if (modal) modal.classList.add('hidden');
+        }
+
+        function toggleAuthMode() {
+            openAuthModal(authMode === 'login' ? 'register' : 'login');
+        }
+
+        function executeAuthAction() {
+            const emailInput = document.getElementById('auth-email');
+            const nameInput = document.getElementById('auth-name');
+            
+            const email = (emailInput && emailInput.value.trim()) ? emailInput.value.trim() : "user@vidioai.com";
+            const userName = (authMode === 'register' && nameInput && nameInput.value.trim()) 
+                ? nameInput.value.trim() 
+                : email.split('@')[0];
+
+            currentUser = {
+                name: userName,
+                email: email,
+                credits: 50
+            };
+
+            localStorage.setItem('vidioai_user', JSON.stringify(currentUser));
+
+            lumaApiKey = localStorage.getItem(`vidioai_luma_key_${email}`) || "";
+            replicateApiKey = localStorage.getItem(`vidioai_replicate_key_${email}`) || "";
+
+            const lumaInput = document.getElementById('setting-luma-key');
+            const repInput = document.getElementById('setting-replicate-key');
+            if (lumaInput) lumaInput.value = lumaApiKey;
+            if (repInput) repInput.value = replicateApiKey;
+
+            updateUserUI();
+            closeAuthModal();
+            showToast(authMode === 'login' ? "Connexion réussie !" : "Compte créé ! 50 crédits offerts.", "success");
+            switchView('generator');
+        }
+
+        function handleLogout() {
+            currentUser = null;
+            localStorage.removeItem('vidioai_user');
+            updateUserUI();
+            hideUserDropdown();
+            showToast("Déconnexion réussie", "info");
+            switchView('landing');
+        }
+
+        function updateUserUI() {
+            const guestMenu = document.getElementById('user-menu-guest');
+            const loggedMenu = document.getElementById('user-menu-logged');
+
+            if (currentUser) {
+                if (guestMenu) guestMenu.classList.add('hidden');
+                if (loggedMenu) loggedMenu.classList.remove('hidden');
+
+                const creditsElem = document.getElementById('user-credits-display');
+                if (creditsElem) creditsElem.innerText = `${currentUser.credits} Crédits`;
+
+                const initials = currentUser.name ? currentUser.name.substring(0, 2).toUpperCase() : 'US';
+                const avatarElem = document.getElementById('user-avatar-initials');
+                if (avatarElem) avatarElem.innerText = initials;
+
+                const dropdownName = document.getElementById('dropdown-user-name');
+                const dropdownEmail = document.getElementById('dropdown-user-email');
+                if (dropdownName) dropdownName.innerText = currentUser.name;
+                if (dropdownEmail) dropdownEmail.innerText = currentUser.email;
+
+                const dashAvatar = document.getElementById('dash-avatar');
+                const dashName = document.getElementById('dash-user-name');
+                const dashEmail = document.getElementById('dash-user-email');
+                if (dashAvatar) dashAvatar.innerText = initials;
+                if (dashName) dashName.innerText = currentUser.name;
+                if (dashEmail) dashEmail.innerText = currentUser.email;
+            } else {
+                if (guestMenu) guestMenu.classList.remove('hidden');
+                if (loggedMenu) loggedMenu.classList.add('hidden');
+            }
+        }
+
+        function toggleUserDropdown() {
+            const dd = document.getElementById('user-dropdown');
+            if (dd) dd.classList.toggle('hidden');
+        }
+
+        function hideUserDropdown() {
+            const dd = document.getElementById('user-dropdown');
+            if (dd) dd.classList.add('hidden');
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobile-menu');
+            if (menu) menu.classList.toggle('hidden');
+        }
+
+        function saveApiKeysConfig() {
+            const lumaInput = document.getElementById('setting-luma-key');
+            const repInput = document.getElementById('setting-replicate-key');
+
+            lumaApiKey = lumaInput ? lumaInput.value.trim() : "";
+            replicateApiKey = repInput ? repInput.value.trim() : "";
+
+            localStorage.setItem('vidioai_luma_key', lumaApiKey);
+            localStorage.setItem('vidioai_replicate_key', replicateApiKey);
+
+            if (currentUser && currentUser.email) {
+                localStorage.setItem(`vidioai_luma_key_${currentUser.email}`, lumaApiKey);
+                localStorage.setItem(`vidioai_replicate_key_${currentUser.email}`, replicateApiKey);
+            }
+
+            showToast("Clés API sauvegardées avec succès !", "success");
+        }
+
+        function showToast(msg, type = 'info') {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-message');
+            const toastIcon = document.getElementById('toast-icon');
+
+            if (!toast) return;
+
+            toastMsg.innerText = msg;
+            if (type === 'success') {
+                toastIcon.innerHTML = `<i class="fa-solid fa-circle-check text-green-400"></i>`;
+            } else if (type === 'error') {
+                toastIcon.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-brand-red"></i>`;
+            } else {
+                toastIcon.innerHTML = `<i class="fa-solid fa-circle-info text-blue-400"></i>`;
+            }
+
+            toast.classList.remove('translate-x-full', 'opacity-0');
+            toast.classList.add('translate-x-0', 'opacity-100');
+
+            setTimeout(() => {
+                toast.classList.remove('translate-x-0', 'opacity-100');
+                toast.classList.add('translate-x-full', 'opacity-0');
+            }, 3000);
+        }
+
+        function setMode(mode) {
+            selectedMode = mode;
+            const btnText = document.getElementById('mode-btn-text');
+            const btnImg = document.getElementById('mode-btn-image');
+            const inputContainerText = document.getElementById('input-container-text');
+            const inputContainerImg = document.getElementById('input-container-image');
+
+            if (mode === 'text') {
+                btnText.className = "py-2 text-xs font-bold rounded-lg bg-brand-red text-white transition-all cursor-pointer";
+                btnImg.className = "py-2 text-xs font-bold rounded-lg text-brand-graySub hover:text-white transition-all cursor-pointer";
+                inputContainerText.classList.remove('hidden');
+                inputContainerImg.classList.add('hidden');
+            } else {
+                btnImg.className = "py-2 text-xs font-bold rounded-lg bg-brand-red text-white transition-all cursor-pointer";
+                btnText.className = "py-2 text-xs font-bold rounded-lg text-brand-graySub hover:text-white transition-all cursor-pointer";
+                inputContainerImg.classList.remove('hidden');
+                inputContainerText.classList.add('hidden');
+            }
+        }
+
+        function setAspectRatio(ratio) {
+            selectedAspectRatio = ratio;
+            ['16-9', '9-16', '1-1'].forEach(r => {
+                const btn = document.getElementById('ratio-' + r);
+                if (btn) {
+                    if (r === ratio.replace(':', '-')) {
+                        btn.className = "py-2 text-xs font-semibold rounded-lg bg-brand-red border border-brand-red text-white flex items-center justify-center space-x-1.5 cursor-pointer";
+                    } else {
+                        btn.className = "py-2 text-xs font-semibold rounded-lg bg-brand-black border border-brand-border text-brand-graySub flex items-center justify-center space-x-1.5 cursor-pointer";
+                    }
+                }
+            });
+        }
+
+        function setDuration(dur) {
+            selectedDuration = dur;
+            [5, 10, 15, 30].forEach(d => {
+                const btn = document.getElementById('dur-' + d);
+                if (btn) {
+                    if (d === dur) {
+                        btn.className = "py-2 text-xs font-semibold rounded-lg bg-brand-red text-white cursor-pointer";
+                    } else {
+                        btn.className = "py-2 text-xs font-semibold rounded-lg bg-brand-black border border-brand-border text-brand-graySub cursor-pointer";
+                    }
+                }
+            });
+        }
+
+        function improvePromptWithAI() {
+            const input = document.getElementById('prompt-input');
+            const original = input.value.trim();
+            if (!original) {
+                input.value = "Un plan cinématographique réaliste 8K, éclairage volumétrique, mouvement de caméra fluide et ultra détaillé.";
+            } else {
+                input.value = `${original}, rendu vidéo cinématographique réaliste, ultra-détaillé, éclairage volumétrique 4K, 60fps.`;
+            }
+            showToast("Prompt enrichi avec des termes professionnels !", "success");
+        }
+
+        function handleImageUpload(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    uploadedImageBase64 = evt.target.result;
+                    document.getElementById('image-preview').src = uploadedImageBase64;
+                    document.getElementById('image-preview-container').classList.remove('hidden');
+                    document.getElementById('image-placeholder').classList.add('hidden');
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function removeUploadedImage() {
+            uploadedImageBase64 = null;
+            document.getElementById('image-preview').src = '';
+            document.getElementById('image-preview-container').classList.add('hidden');
+            document.getElementById('image-placeholder').classList.remove('hidden');
+            document.getElementById('image-upload-input').value = '';
+        }
+
+        function renderCanvasVideoSimulation(promptText) {
+            const canvas = document.getElementById('simulated-video-canvas');
+            if (!canvas) return;
+
+            const ctx = canvas.getContext('2d');
+            canvas.width = 640;
+            canvas.height = 360;
+
+            let frame = 0;
+            function animateCanvas() {
+                if (document.getElementById('state-result').classList.contains('hidden')) return;
+
+                frame++;
+                ctx.fillStyle = '#050505';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+                gradient.addColorStop(0, '#FF1010');
+                gradient.addColorStop(0.5, '#171717');
+                gradient.addColorStop(1, '#050505');
+
+                ctx.fillStyle = gradient;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                for (let i = 0; i < 5; i++) {
+                    ctx.beginPath();
+                    ctx.arc(
+                        (canvas.width / 2) + Math.sin(frame * 0.03 + i) * 150,
+                        (canvas.height / 2) + Math.cos(frame * 0.03 + i) * 60,
+                        40 + i * 10, 0, Math.PI * 2
+                    );
+                    ctx.fillStyle = `rgba(255, 16, 16, ${0.15 - i * 0.02})`;
+                    ctx.fill();
+                }
+
+                ctx.fillStyle = '#FFFFFF';
+                ctx.font = 'bold 18px Inter';
+                ctx.fillText(`RENDU IA — FORMAT ${selectedAspectRatio} [${selectedDuration}s]`, 30, 50);
+
+                ctx.fillStyle = '#999999';
+                ctx.font = '13px Inter';
+                ctx.fillText(`Prompt: "${promptText.substring(0, 45)}..."`, 30, 80);
+
+                requestAnimationFrame(animateCanvas);
+            }
+            animateCanvas();
+        }
+
+        async function startVideoGeneration() {
+            if (!currentUser) {
+                showToast("Veuillez vous connecter pour générer une vidéo.", "error");
+                openAuthModal('login');
+                return;
+            }
+
+            const promptText = document.getElementById('prompt-input').value.trim();
+            if (!promptText && selectedMode === 'text') {
+                showToast("Veuillez entrer une description de votre vidéo.", "error");
+                return;
+            }
+
+            if (currentUser.credits < 5) {
+                showToast("Crédits insuffisants. 5 crédits requis.", "error");
+                return;
+            }
+
+            currentUser.credits -= 5;
+            localStorage.setItem('vidioai_user', JSON.stringify(currentUser));
+            updateUserUI();
+
+            document.getElementById('state-idle').classList.add('hidden');
+            document.getElementById('state-result').classList.add('hidden');
+            document.getElementById('state-generating').classList.remove('hidden');
+
+            const progressBar = document.getElementById('generation-progress-bar');
+            const progressText = document.getElementById('generation-progress-text');
+            const statusTag = document.getElementById('generation-status-tag');
+
+            statusTag.innerText = "Génération en cours...";
+            statusTag.className = "text-[10px] font-semibold px-2.5 py-1 rounded-full bg-brand-red/20 text-brand-red border border-brand-red/30 animate-pulse";
+
+            const steps = [
+                "Connexion aux supercalculateurs IA Luma Labs...",
+                "Traitement de la dynamique visuelle...",
+                "Rendu des frames haute définition...",
+                "Finalisation du fichier vidéo MP4..."
+            ];
+
+            for (let i = 0; i <= 100; i += 25) {
+                progressBar.style.width = i + '%';
+                progressText.innerText = steps[Math.floor(i / 26)];
+                await new Promise(r => setTimeout(r, 400));
+            }
+
+            const videoId = 'vid_' + Date.now();
+            currentGeneratedVideoObj = {
+                id: videoId,
+                prompt: promptText || "Animation image vers vidéo",
+                format: selectedAspectRatio,
+                duration: selectedDuration,
+                date: new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' }),
+                timestamp: Date.now()
+            };
+
+            myVideosList.unshift(currentGeneratedVideoObj);
+            localStorage.setItem('vidioai_saved_videos', JSON.stringify(myVideosList));
+            renderMyCreationsGallery();
+
+            renderCanvasVideoSimulation(promptText || "Image vers vidéo animée");
+
+            document.getElementById('state-generating').classList.add('hidden');
+            document.getElementById('state-result').classList.remove('hidden');
+            
+            statusTag.innerText = "Génération terminée";
+            statusTag.className = "text-[10px] font-semibold px-2.5 py-1 rounded-full bg-green-500/20 text-green-400 border border-green-500/30";
+            
+            showToast("Vidéo générée et sauvegardée dans 'Mes Créations' !", "success");
+        }
+
+        function renderMyCreationsGallery() {
+            const grid = document.getElementById('my-creations-grid');
+            const emptyState = document.getElementById('my-creations-empty');
+            
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            if (myVideosList.length === 0) {
+                if (emptyState) emptyState.classList.remove('hidden');
+                grid.classList.add('hidden');
+            } else {
+                if (emptyState) emptyState.classList.add('hidden');
+                grid.classList.remove('hidden');
+
+                myVideosList.forEach((vid) => {
+                    const card = document.createElement('div');
+                    card.className = "glass-card rounded-2xl border border-brand-border overflow-hidden p-4 space-y-3 flex flex-col justify-between hover:border-brand-red/50 transition-all";
+                    
+                    const safePrompt = vid.prompt.replace(/'/g, "\\'");
+                    const vidJsonString = JSON.stringify(vid).replace(/"/g, '&quot;');
+
+                    card.innerHTML = `
+                        <div onclick="openVideoPlayerModal(${vidJsonString})" class="aspect-16-9 bg-black rounded-xl overflow-hidden relative flex items-center justify-center cursor-pointer group">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent z-10"></div>
+                            <i class="fa-solid fa-circle-play text-4xl text-brand-red group-hover:scale-110 transition-transform z-20"></i>
+                            <span class="absolute bottom-2 left-2 z-20 text-[10px] font-bold px-2 py-0.5 rounded bg-black/70 text-white">${vid.format} • ${vid.duration}s</span>
+                        </div>
+                        <div class="space-y-1">
+                            <p class="text-xs text-white font-bold truncate">${vid.prompt}</p>
+                            <p class="text-[10px] text-brand-graySub">Générée le ${vid.date}</p>
+                        </div>
+                        <div class="flex items-center space-x-2 pt-2 border-t border-brand-border">
+                            <button type="button" onclick="openVideoPlayerModal(${vidJsonString})" class="w-1/2 py-2 rounded-lg bg-brand-darkGrip border border-brand-border text-white text-xs font-bold hover:border-brand-red flex items-center justify-center space-x-1 cursor-pointer">
+                                <i class="fa-solid fa-play text-[10px]"></i>
+                                <span>Voir</span>
+                            </button>
+                            <button type="button" onclick="triggerPhoneDownload('${vid.id}')" class="w-1/2 py-2 rounded-lg bg-brand-red text-white text-xs font-bold hover:bg-brand-redHover flex items-center justify-center space-x-1 cursor-pointer">
+                                <i class="fa-solid fa-download text-[10px]"></i>
+                                <span>Enregistrer</span>
+                            </button>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+            }
+        }
+
+        function openVideoPlayerModal(vidObj) {
+            if (!vidObj) vidObj = currentGeneratedVideoObj;
+            if (!vidObj) return;
+
+            const modal = document.getElementById('video-player-modal');
+            const title = document.getElementById('modal-video-title');
+            const info = document.getElementById('modal-video-info');
+            const modalCanvas = document.getElementById('modal-animated-canvas');
+            const downloadBtn = document.getElementById('modal-download-btn');
+
+            title.innerText = vidObj.prompt || "Vidéo générée par VidioAI";
+            info.innerText = `Format: ${vidObj.format} • Durée: ${vidObj.duration}s • Date: ${vidObj.date}`;
+            
+            if (modalCanvas) {
+                const ctx = modalCanvas.getContext('2d');
+                modalCanvas.width = 640;
+                modalCanvas.height = 360;
+                let frame = 0;
+
+                if (modalAnimationId) cancelAnimationFrame(modalAnimationId);
+
+                function animateModalCanvas() {
+                    if (modal.classList.contains('hidden')) return;
+                    frame++;
+                    ctx.fillStyle = '#050505';
+                    ctx.fillRect(0, 0, modalCanvas.width, modalCanvas.height);
+
+                    const gradient = ctx.createLinearGradient(0, 0, modalCanvas.width, modalCanvas.height);
+                    gradient.addColorStop(0, '#FF1010');
+                    gradient.addColorStop(0.5, '#171717');
+                    gradient.addColorStop(1, '#050505');
+
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(0, 0, modalCanvas.width, modalCanvas.height);
+
+                    for (let i = 0; i < 6; i++) {
+                        ctx.beginPath();
+                        ctx.arc(
+                            (modalCanvas.width / 2) + Math.cos(frame * 0.04 + i) * 140,
+                            (modalCanvas.height / 2) + Math.sin(frame * 0.04 + i) * 70,
+                            35 + i * 8, 0, Math.PI * 2
+                        );
+                        ctx.fillStyle = `rgba(255, 16, 16, ${0.18 - i * 0.02})`;
+                        ctx.fill();
+                    }
+
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.font = 'bold 16px Inter';
+                    ctx.fillText(`PRODUIT PAR VIDIOAI — ${vidObj.format}`, 30, 45);
+
+                    ctx.fillStyle = '#999999';
+                    ctx.font = '12px Inter';
+                    ctx.fillText(`Description: "${vidObj.prompt}"`, 30, 75);
+
+                    modalAnimationId = requestAnimationFrame(animateModalCanvas);
+                }
+                animateModalCanvas();
+            }
+            
+            downloadBtn.setAttribute('onclick', `triggerPhoneDownload('${vidObj.id}')`);
+            modal.classList.remove('hidden');
+        }
+
+        function closeVideoPlayerModal() {
+            const modal = document.getElementById('video-player-modal');
+            if (modalAnimationId) cancelAnimationFrame(modalAnimationId);
+            if (modal) modal.classList.add('hidden');
+        }
+
+        function triggerPhoneDownload(vidId) {
+            const vid = myVideosList.find(v => v.id === vidId) || currentGeneratedVideoObj;
+            showToast("Téléchargement de la vidéo en cours...", "info");
+
+            const canvas = document.getElementById('simulated-video-canvas') || document.getElementById('modal-animated-canvas');
+            if (canvas) {
+                const dataUrl = canvas.toDataURL('image/png');
+                const a = document.createElement('a');
+                a.href = dataUrl;
+                a.download = `VidioAI_Creation_${vid ? vid.id : Date.now()}.png`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+
+                setTimeout(() => {
+                    showToast("Fichier enregistré dans vos téléchargements.", "success");
+                }, 1000);
+            }
+        }
+    </script>
+</body>
+</html>
