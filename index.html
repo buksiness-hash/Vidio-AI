@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="fr" class="dark">
 <head>
@@ -79,11 +78,271 @@
         <nav class="hidden md:flex items-center space-x-6 text-xs font-semibold text-brand-graySub">
             <button type="button" onclick="switchView('generator')" class="hover:text-white transition-colors cursor-pointer">Générateur</button>
             <button type="button" onclick="switchView('my-creations')" class="hover:text-white transition-colors cursor-pointer">Mes Créations</button>
-            <button type="button" onclick="switchView('gallery')" class="hover:text-white transition-colors cursor-pointer">Galerie</button>
             <button type="button" onclick="switchView('pricing')" class="hover:text-white transition-colors cursor-pointer">Tarifs</button>
+            <button type="button" onclick="switchView('settings')" class="hover:text-white transition-colors cursor-pointer"><i class="fa-solid fa-gear mr-1"></i> Clés API</button>
         </nav>
+
+        <!-- USER / AUTH BUTTONS -->
+        <div id="auth-buttons" class="flex items-center space-x-3">
+            <button onclick="openAuthModal('login')" class="text-xs text-brand-graySub hover:text-white font-medium px-3 py-1.5 transition-colors">Connexion</button>
+            <button onclick="openAuthModal('signup')" class="bg-brand-red hover:bg-brand-redHover text-white text-xs font-semibold px-4 py-1.5 rounded-lg transition-colors red-glow-subtle">Inscription</button>
+        </div>
+
+        <div id="user-profile" class="hidden flex items-center space-x-3">
+            <span id="user-name" class="text-xs font-semibold text-white"></span>
+            <button onclick="logout()" class="text-xs text-brand-graySub hover:text-brand-red transition-colors"><i class="fa-solid fa-right-from-bracket"></i></button>
+        </div>
     </header>
 
-</body>
-</html>
-```
+    <!-- CONTENT VIEWS CONTAINER -->
+    <main class="flex-grow max-w-7xl w-full mx-auto p-4 md:p-8">
+        
+        <!-- MODAL AUTHENTIFICATION -->
+        <div id="auth-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+            <div class="glass-card rounded-2xl p-6 md:p-8 max-w-md w-full relative">
+                <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-brand-graySub hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
+                
+                <h2 id="auth-title" class="text-2xl font-bold text-white mb-2">Connexion</h2>
+                <p id="auth-subtitle" class="text-xs text-brand-graySub mb-6">Accédez à votre espace VidioAI</p>
+
+                <div id="auth-error" class="hidden mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs"></div>
+
+                <form onsubmit="handleAuthSubmit(event)" class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-medium text-brand-graySub mb-1">Nom d'utilisateur</label>
+                        <input type="text" id="auth-username" required class="w-full bg-brand-black border border-brand-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-red">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-brand-graySub mb-1">Mot de passe</label>
+                        <input type="password" id="auth-password" required class="w-full bg-brand-black border border-brand-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-red">
+                    </div>
+                    <button type="submit" id="auth-submit-btn" class="w-full bg-brand-red hover:bg-brand-redHover font-semibold py-2.5 rounded-lg text-sm text-white red-glow">Se connecter</button>
+                </form>
+
+                <p class="text-xs text-center text-brand-graySub mt-4">
+                    <span id="auth-switch-text">Vous n'avez pas de compte ?</span>
+                    <button onclick="toggleAuthMode()" id="auth-switch-btn" class="text-brand-red font-medium ml-1">S'inscrire</button>
+                </p>
+            </div>
+        </div>
+
+        <!-- APP CONTENT VIEWS -->
+        <div id="view-landing" class="py-12 text-center space-y-6">
+            <h1 class="text-4xl md:text-6xl font-black tracking-tight text-white">Créez des vidéos IA extraordinaires en un instant.</h1>
+            <p class="text-brand-graySub max-w-2xl mx-auto text-sm md:text-base">Generez, éditez et personnalisez vos contenus multimédias instantanément.</p>
+            <button onclick="switchView('generator')" class="bg-brand-red hover:bg-brand-redHover px-8 py-3.5 rounded-xl font-bold text-sm text-white red-glow transition-all">Lancer le Générateur</button>
+        </div>
+
+        <div id="view-generator" class="hidden space-y-6">
+            <h2 class="text-xl font-bold">Générateur Vidéo AI</h2>
+            
+            <!-- Choix du moteur AI -->
+            <div class="glass-card p-6 rounded-xl space-y-4">
+                <label class="block text-xs font-semibold text-brand-graySub">Choisissez le moteur de génération :</label>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <button type="button" id="btn-provider-replicate" onclick="selectProvider('replicate')" class="p-4 rounded-xl border border-brand-red bg-brand-red/10 flex items-center justify-between text-left transition-all">
+                        <div>
+                            <div class="font-bold text-sm text-white">Replicate API</div>
+                            <div class="text-[11px] text-brand-graySub">Exécution de modèles open-source (Sora/WAN, Stable Video)</div>
+                        </div>
+                        <i id="icon-replicate" class="fa-solid fa-circle-check text-brand-red"></i>
+                    </button>
+
+                    <button type="button" id="btn-provider-luma" onclick="selectProvider('luma')" class="p-4 rounded-xl border border-brand-border bg-brand-black/50 flex items-center justify-between text-left transition-all hover:border-brand-graySub">
+                        <div>
+                            <div class="font-bold text-sm text-white">Luma AI (Lunalabs)</div>
+                            <div class="text-[11px] text-brand-graySub">Moteur Dream Machine cinématique de haute qualité</div>
+                        </div>
+                        <i id="icon-luma" class="fa-regular fa-circle text-brand-graySub"></i>
+                    </button>
+                </div>
+
+                <!-- Input Clé API contextuel -->
+                <div class="pt-2">
+                    <label id="key-label" class="block text-xs font-medium text-brand-graySub mb-1">Clé API Replicate</label>
+                    <input type="password" id="api-key-input" placeholder="Entrez votre clé d'accès (ex: r8_... ou luma-...)" class="w-full bg-brand-black border border-brand-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-red">
+                    <p class="text-[10px] text-brand-graySub mt-1">La clé est enregistrée sur votre compte localement.</p>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-medium text-brand-graySub mb-1">Prompt / Description de la vidéo</label>
+                    <textarea id="prompt-input" rows="4" placeholder="Un astronaute marchand sur Mars au coucher du soleil, style cinématographique 4k..." class="w-full bg-brand-black border border-brand-border rounded-lg p-3 text-sm text-white focus:outline-none focus:border-brand-red"></textarea>
+                </div>
+
+                <div class="flex items-center justify-end space-x-3">
+                    <button onclick="generateVideo()" class="bg-brand-red hover:bg-brand-redHover px-6 py-2.5 rounded-lg font-semibold text-xs text-white red-glow transition-all flex items-center space-x-2">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        <span>Générer avec <span id="current-provider-name">Replicate</span></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-my-creations" class="hidden space-y-6">
+            <h2 class="text-xl font-bold">Mes Créations</h2>
+            <div id="creations-grid" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Les vidéos sauvegardées s'afficheront ici -->
+            </div>
+        </div>
+
+        <div id="view-pricing" class="hidden space-y-6 text-center py-6">
+            <h2 class="text-2xl font-bold text-white mb-2">Nos Offres</h2>
+            <p class="text-xs text-brand-graySub mb-8">Utilisez vos propres clés API sans surcoût ou optez pour nos crédits illimités.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
+                <div class="glass-card p-6 rounded-2xl border border-brand-border text-left space-y-4">
+                    <h3 class="font-bold text-lg text-white">Bring Your Own Key (BYOK)</h3>
+                    <div class="text-3xl font-black text-white">0€ <span class="text-xs font-normal text-brand-graySub">/mois</span></div>
+                    <ul class="text-xs text-brand-graySub space-y-2">
+                        <li><i class="fa-solid fa-check text-brand-red mr-2"></i> Support clé Replicate API</li>
+                        <li><i class="fa-solid fa-check text-brand-red mr-2"></i> Support clé Luma AI (Lunalabs)</li>
+                        <li><i class="fa-solid fa-check text-brand-red mr-2"></i> Sauvegarde locale illimitée</li>
+                    </ul>
+                </div>
+                <div class="glass-card p-6 rounded-2xl border border-brand-red red-glow-subtle text-left space-y-4">
+                    <h3 class="font-bold text-lg text-white">Pro Studio</h3>
+                    <div class="text-3xl font-black text-brand-red">19.99€ <span class="text-xs font-normal text-brand-graySub">/mois</span></div>
+                    <ul class="text-xs text-brand-graySub space-y-2">
+                        <li><i class="fa-solid fa-check text-brand-red mr-2"></i> Clés fournies et gérées</li>
+                        <li><i class="fa-solid fa-check text-brand-red mr-2"></i> Génération prioritaire ultra-rapide</li>
+                        <li><i class="fa-solid fa-check text-brand-red mr-2"></i> Rendu HD & 4K sans filigrane</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // AUTH & STORAGE SYSTEM
+        let currentMode = 'login';
+        let selectedProvider = 'replicate'; // 'replicate' ou 'luma'
+        let currentUser = JSON.parse(localStorage.getItem('vidioai_session')) || null;
+
+        function updateUI() {
+            const authBtns = document.getElementById('auth-buttons');
+            const userProf = document.getElementById('user-profile');
+            const userName = document.getElementById('user-name');
+
+            if (currentUser) {
+                authBtns.classList.add('hidden');
+                userProf.classList.remove('hidden');
+                userName.textContent = currentUser.username;
+                loadUserCreations();
+                loadUserKeys();
+            } else {
+                authBtns.classList.remove('hidden');
+                userProf.classList.add('hidden');
+            }
+        }
+
+        function selectProvider(provider) {
+            selectedProvider = provider;
+            const btnRep = document.getElementById('btn-provider-replicate');
+            const btnLuma = document.getElementById('btn-provider-luma');
+            const iconRep = document.getElementById('icon-replicate');
+            const iconLuma = document.getElementById('icon-luma');
+            const keyLabel = document.getElementById('key-label');
+            const providerName = document.getElementById('current-provider-name');
+
+            if (provider === 'replicate') {
+                btnRep.className = 'p-4 rounded-xl border border-brand-red bg-brand-red/10 flex items-center justify-between text-left transition-all';
+                btnLuma.className = 'p-4 rounded-xl border border-brand-border bg-brand-black/50 flex items-center justify-between text-left transition-all hover:border-brand-graySub';
+                iconRep.className = 'fa-solid fa-circle-check text-brand-red';
+                iconLuma.className = 'fa-regular fa-circle text-brand-graySub';
+                keyLabel.textContent = 'Clé API Replicate (ex: r8_...)';
+                providerName.textContent = 'Replicate';
+            } else {
+                btnLuma.className = 'p-4 rounded-xl border border-brand-red bg-brand-red/10 flex items-center justify-between text-left transition-all';
+                btnRep.className = 'p-4 rounded-xl border border-brand-border bg-brand-black/50 flex items-center justify-between text-left transition-all hover:border-brand-graySub';
+                iconLuma.className = 'fa-solid fa-circle-check text-brand-red';
+                iconRep.className = 'fa-regular fa-circle text-brand-graySub';
+                keyLabel.textContent = 'Clé API Luma AI / Lunalabs (ex: luma-...)';
+                providerName.textContent = 'Luma AI';
+            }
+            loadUserKeys();
+        }
+
+        function loadUserKeys() {
+            if (!currentUser) return;
+            let users = JSON.parse(localStorage.getItem('vidioai_users')) || {};
+            const userData = users[currentUser.username] || {};
+            const keys = userData.keys || {};
+            const keyInput = document.getElementById('api-key-input');
+            if (keyInput) {
+                keyInput.value = keys[selectedProvider] || '';
+            }
+        }
+
+        function openAuthModal(mode) {
+            currentMode = mode;
+            document.getElementById('auth-modal').classList.remove('hidden');
+            document.getElementById('auth-error').classList.add('hidden');
+            document.getElementById('auth-title').textContent = mode === 'login' ? 'Connexion' : 'Inscription';
+            document.getElementById('auth-submit-btn').textContent = mode === 'login' ? 'Se connecter' : "S'inscrire";
+            document.getElementById('auth-switch-text').textContent = mode === 'login' ? "Vous n'avez pas de compte ?" : "Vous avez déjà un compte ?";
+            document.getElementById('auth-switch-btn').textContent = mode === 'login' ? "S'inscrire" : "Se connecter";
+        }
+
+        function closeAuthModal() {
+            document.getElementById('auth-modal').classList.add('hidden');
+        }
+
+        function toggleAuthMode() {
+            openAuthModal(currentMode === 'login' ? 'signup' : 'login');
+        }
+
+        function handleAuthSubmit(e) {
+            e.preventDefault();
+            const username = document.getElementById('auth-username').value.trim();
+            const password = document.getElementById('auth-password').value;
+            const errorDiv = document.getElementById('auth-error');
+
+            let users = JSON.parse(localStorage.getItem('vidioai_users')) || {};
+
+            if (currentMode === 'signup') {
+                if (users[username]) {
+                    errorDiv.textContent = "Ce nom d'utilisateur existe déjà.";
+                    errorDiv.classList.remove('hidden');
+                    return;
+                }
+                users[username] = { password, creations: [], keys: { replicate: '', luma: '' } };
+                localStorage.setItem('vidioai_users', JSON.stringify(users));
+                currentUser = { username };
+                localStorage.setItem('vidioai_session', JSON.stringify(currentUser));
+                closeAuthModal();
+                updateUI();
+            } else {
+                if (!users[username] || users[username].password !== password) {
+                    errorDiv.textContent = "Nom d'utilisateur ou mot de passe incorrect.";
+                    errorDiv.classList.remove('hidden');
+                    return;
+                }
+                currentUser = { username };
+                localStorage.setItem('vidioai_session', JSON.stringify(currentUser));
+                closeAuthModal();
+                updateUI();
+            }
+        }
+
+        function logout() {
+            currentUser = null;
+            localStorage.removeItem('vidioai_session');
+            updateUI();
+            switchView('landing');
+        }
+
+        function switchView(viewName) {
+            ['landing', 'generator', 'my-creations', 'pricing'].forEach(v => {
+                const el = document.getElementById('view-' + v);
+                if (el) el.classList.add('hidden');
+            });
+            const active = document.getElementById('view-' + viewName);
+            if (active) active.classList.remove('hidden');
+        }
+
+        function generateVideo() {
+            if (!currentUser) {
+                openAuthModal('login');
+                return;
+            }
+            const prompt = document.getElementById('prompt-input').value.trim();
+            const apiKe
