@@ -1,177 +1,559 @@
 <!DOCTYPE html>
 <html lang="fr" class="dark">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="google-site-verification" content="pcRtP6Y8xD8fLlctfAjnn5ecrn50bibvzacrpD-mlhA" />
-    <title>VidioAI - Plateforme de Génération Vidéo par Intelligence Artificielle</title>
-    <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts Inter -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="google-site-verification" content="pcRtP6Y8xD8fLlctfAjnn5ecrn50bibvzacrpD-mlhA" />
+<title>VidioAI - Plateforme de Génération Vidéo par Intelligence Artificielle</title>
+<meta name="description" content="VidioAI génère des vidéos par intelligence artificielle à partir d'une simple description, avec vos clés Replicate ou Luma AI.">
+<meta name="theme-color" content="#050505">
+<meta property="og:type" content="website">
+<meta property="og:title" content="VidioAI - Génération vidéo par IA">
+<meta property="og:description" content="VidioAI génère des vidéos par intelligence artificielle à partir d'une simple description, avec vos clés Replicate ou Luma AI.">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='22' fill='%23050505'/%3E%3Cpath d='M15 20 C 35 20, 45 80, 55 80 C 65 80, 80 30, 90 35' stroke='%23FF1010' stroke-width='14' stroke-linecap='round' fill='none'/%3E%3Cpolygon points='62,40 62,65 82,52.5' fill='%23fff'/%3E%3C/svg%3E">
+<script src="https://cdn.tailwindcss.com/3.4.17"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        brand: {
-                            black: '#050505',
-                            red: '#FF1010',
-                            redHover: '#D00A0A',
-                            darkGray: '#171717',
-                            graySub: '#A0A0A0',
-                            border: '#262626'
-                        }
-                    },
-                    fontFamily: {
-                        sans: ['Inter', 'sans-serif']
+<script>
+    if (window.tailwind) tailwind.config = {
+        darkMode: 'class',
+        theme: {
+            extend: {
+                colors: {
+                    brand: {
+                        black: '#050505',
+                        red: '#FF1010',
+                        redHover: '#D00A0A',
+                        darkGray: '#171717',
+                        graySub: '#A0A0A0',
+                        border: '#262626'
                     }
+                },
+                fontFamily: {
+                    sans: ['Inter', 'system-ui', 'sans-serif']
                 }
             }
         }
-    </script>
+    }
+</script>
 
-    <style>
-        body {
-            background-color: #050505;
-            color: #ffffff;
-            font-family: 'Inter', sans-serif;
-            overflow-x: hidden;
-            -webkit-tap-highlight-color: transparent;
+<style>
+    /* Concept : studio vidéo sombre, noir profond et rouge signal, navigation en barre basse sur mobile */
+    :root {
+        --black: #050505;
+        --ink: #ffffff;
+        --red: #FF1010;
+        --red-hover: #D00A0A;
+        --gray-dark: #171717;
+        --gray-sub: #A0A0A0;
+        --border: #262626;
+        --ok: #4ade80;
+        --font-sans: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+        --ease: cubic-bezier(0.22, 1, 0.36, 1);
+        --spring: cubic-bezier(0.34, 1.4, 0.64, 1);
+    }
+    html:root { color-scheme: dark; }
+
+    body {
+        background: var(--black);
+        color: var(--ink);
+        font-family: var(--font-sans);
+        overflow-x: hidden;
+        -webkit-tap-highlight-color: transparent;
+    }
+    /* Bande sous la barre système, peinte comme l'en-tête */
+    body::before {
+        content: "";
+        position: fixed;
+        inset: 0 0 auto;
+        height: env(safe-area-inset-top, 0px);
+        z-index: 45;
+        background: rgba(14, 14, 16, 0.6);
+        -webkit-backdrop-filter: blur(24px) saturate(180%);
+        backdrop-filter: blur(24px) saturate(180%);
+    }
+
+    #app {
+        position: relative;
+        min-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+        display: flex;
+        flex-direction: column;
+    }
+
+    .gutter {
+        padding-left: max(16px, env(safe-area-inset-left, 0px));
+        padding-right: max(16px, env(safe-area-inset-right, 0px));
+    }
+    @media (min-width: 768px) {
+        .gutter {
+            padding-left: max(32px, env(safe-area-inset-left, 0px));
+            padding-right: max(32px, env(safe-area-inset-right, 0px));
         }
-        .red-glow {
-            box-shadow: 0 0 35px rgba(255, 16, 16, 0.25);
+    }
+
+    .site-header {
+        position: sticky;
+        top: env(safe-area-inset-top, 0px);
+        z-index: 40;
+        background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02)),
+            rgba(14, 14, 16, 0.55);
+        -webkit-backdrop-filter: blur(24px) saturate(180%);
+        backdrop-filter: blur(24px) saturate(180%);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.4), 0 10px 30px -14px rgba(0, 0, 0, 0.7);
+    }
+    .header-inner {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        padding-block: 12px;
+    }
+
+    .main-pad { padding-block: 24px 112px; }
+    @media (min-width: 768px) { .main-pad { padding-block: 32px; } }
+
+    .red-glow { box-shadow: 0 0 35px rgba(255, 16, 16, 0.25); }
+    .red-glow-subtle { box-shadow: 0 0 15px rgba(255, 16, 16, 0.15); }
+    .glass-card {
+        position: relative;
+        background:
+            linear-gradient(135deg, rgba(255, 255, 255, 0.075), rgba(255, 255, 255, 0.015) 45%, rgba(255, 255, 255, 0.04)),
+            rgba(18, 18, 20, 0.55);
+        -webkit-backdrop-filter: blur(22px) saturate(170%);
+        backdrop-filter: blur(22px) saturate(170%);
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.16),
+            inset 0 -1px 0 rgba(0, 0, 0, 0.35),
+            0 18px 40px -18px rgba(0, 0, 0, 0.75);
+        transition: transform .5s var(--ease), box-shadow .5s var(--ease), background-color .5s var(--ease), border-color .5s var(--ease);
+    }
+    .glass-card.red-glow-subtle {
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.16),
+            inset 0 -1px 0 rgba(0, 0, 0, 0.35),
+            0 18px 40px -18px rgba(0, 0, 0, 0.75),
+            0 0 36px rgba(255, 16, 16, 0.18);
+    }
+    /* Liseré lumineux sur le bord */
+    .glass-card::before {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        padding: 1px;
+        background: linear-gradient(150deg, rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0.05) 32%, rgba(255, 255, 255, 0) 62%, rgba(255, 16, 16, 0.28));
+        -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+        -webkit-mask-composite: xor;
+        mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+        mask-composite: exclude;
+        pointer-events: none;
+    }
+    .glass-card.border-brand-red::before {
+        background: linear-gradient(150deg, rgba(255, 16, 16, 0.85), rgba(255, 16, 16, 0.15) 50%, rgba(255, 16, 16, 0.5));
+    }
+    /* Reflet qui suit le pointeur */
+    .glass-card::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: inherit;
+        pointer-events: none;
+        opacity: 0;
+        background: radial-gradient(240px circle at var(--mx, 50%) var(--my, 0%), rgba(255, 255, 255, 0.11), transparent 65%);
+        transition: opacity .5s var(--ease);
+    }
+    @media (hover: hover) {
+        .glass-card:hover::after { opacity: 1; }
+        article.glass-card:hover { transform: translateY(-3px); }
+    }
+    .aspect-16-9 { aspect-ratio: 16 / 9; max-width: 100%; }
+    .aspect-9-16 { aspect-ratio: 9 / 16; max-width: 100%; }
+    .aspect-1-1 { aspect-ratio: 1 / 1; max-width: 100%; }
+
+    .icon {
+        width: 1em;
+        height: 1em;
+        flex: none;
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 2;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+    }
+
+    .nav-link { color: var(--gray-sub); transition: color .15s; }
+    .nav-link:hover { color: #fff; }
+    .nav-link.is-active { color: #fff !important; }
+
+    .mobile-nav { display: none; }
+    @media (max-width: 767px) {
+        /* Barre flottante en verre, avec une pastille qui glisse vers l'onglet actif */
+        .mobile-nav {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            position: fixed;
+            left: max(12px, env(safe-area-inset-left, 0px));
+            right: max(12px, env(safe-area-inset-right, 0px));
+            bottom: calc(10px + env(safe-area-inset-bottom, 0px));
+            z-index: 40;
+            padding: 6px;
+            border-radius: 26px;
+            background:
+                linear-gradient(180deg, rgba(255, 255, 255, 0.09), rgba(255, 255, 255, 0.02)),
+                rgba(16, 16, 18, 0.55);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
+            backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2), 0 18px 40px -12px rgba(0, 0, 0, 0.8);
         }
-        .red-glow-subtle {
-            box-shadow: 0 0 15px rgba(255, 16, 16, 0.15);
+        .mobile-nav::before {
+            content: "";
+            position: absolute;
+            top: 6px;
+            bottom: 6px;
+            left: 6px;
+            width: calc((100% - 12px) / 4);
+            border-radius: 20px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0.06));
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 4px 14px -4px rgba(255, 16, 16, 0.45);
+            transform: translateX(calc(var(--i, 0) * 100%));
+            opacity: var(--on, 0);
+            transition: transform .55s var(--spring), opacity .3s var(--ease);
+            pointer-events: none;
         }
-        .glass-card {
-            background: rgba(23, 23, 23, 0.85);
-            backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-        }
-        .aspect-16-9 { aspect-ratio: 16 / 9; }
-        .aspect-9-16 { aspect-ratio: 9 / 16; }
-        .aspect-1-1 { aspect-ratio: 1 / 1; }
-    </style>
+    }
+    .mobile-nav button {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 3px;
+        padding: 8px 4px;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--gray-sub);
+        border-radius: 20px;
+        transition: color .3s var(--ease), transform .35s var(--spring);
+    }
+    .mobile-nav button:active { transform: scale(.94); }
+    .mobile-nav button .icon { font-size: 20px; transition: color .3s var(--ease); }
+    .mobile-nav button.is-active { color: #fff; }
+    .mobile-nav button.is-active .icon { color: var(--red); }
+
+    .thumb-placeholder {
+        width: 100%;
+        height: 100%;
+        display: grid;
+        place-items: center;
+        color: #fff;
+        background: radial-gradient(circle at 30% 20%, rgba(255, 16, 16, 0.28), transparent 60%), #0b0b0b;
+    }
+
+    #gen-status { border: 1px solid var(--border); background: rgba(5, 5, 5, 0.6); }
+    #gen-status[data-kind="error"] { border-color: rgba(255, 16, 16, 0.45); background: rgba(255, 16, 16, 0.08); }
+    #gen-status[data-kind="success"] { border-color: rgba(74, 222, 128, 0.35); }
+    #gen-status[data-kind="error"] #gen-status-text { color: #fca5a5; }
+    #gen-status[data-kind="success"] #gen-status-text { color: var(--ok); }
+
+    :focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+    input:focus-visible, textarea:focus-visible { outline: none; }
+
+    /* Fond lumineux derrière le verre */
+    .ambient { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+    .ambient i { position: absolute; display: block; border-radius: 50%; will-change: transform; }
+    .ambient .a1 {
+        width: 70vmax; height: 70vmax; left: -25vmax; top: -30vmax;
+        background: radial-gradient(circle, rgba(255, 16, 16, 0.30), transparent 62%);
+        animation: drift1 26s ease-in-out infinite alternate;
+    }
+    .ambient .a2 {
+        width: 60vmax; height: 60vmax; right: -25vmax; top: 25vh;
+        background: radial-gradient(circle, rgba(255, 70, 40, 0.18), transparent 60%);
+        animation: drift2 32s ease-in-out infinite alternate;
+    }
+    .ambient .a3 {
+        width: 55vmax; height: 55vmax; left: 10vw; bottom: -35vmax;
+        background: radial-gradient(circle, rgba(160, 0, 40, 0.28), transparent 62%);
+        animation: drift3 38s ease-in-out infinite alternate;
+    }
+    @keyframes drift1 { to { transform: translate3d(14vmax, 10vmax, 0) scale(1.15); } }
+    @keyframes drift2 { to { transform: translate3d(-12vmax, -8vmax, 0) scale(1.1); } }
+    @keyframes drift3 { to { transform: translate3d(10vmax, -12vmax, 0) scale(1.2); } }
+
+    /* Boutons rouges en verre liquide : rouge sombre translucide, reflet, lueur, rebond gélatineux */
+    button.bg-brand-red {
+        position: relative;
+        isolation: isolate;
+        overflow: hidden;
+        background-color: rgba(120, 8, 8, 0.72);
+        background-image:
+            radial-gradient(120% 90% at 50% 135%, rgba(255, 90, 80, 0.55), transparent 62%),
+            linear-gradient(180deg, rgba(205, 38, 38, 0.78) 0%, rgba(140, 10, 10, 0.72) 50%, rgba(88, 4, 4, 0.85) 100%);
+        text-shadow: 0 1px 2px rgba(60, 0, 0, 0.6);
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.55),
+            inset 0 0 0 1px rgba(255, 255, 255, 0.10),
+            inset 0 -10px 16px -8px rgba(255, 70, 60, 0.45),
+            0 10px 24px -8px rgba(200, 10, 10, 0.65),
+            0 4px 10px -2px rgba(0, 0, 0, 0.55);
+        transform: none;
+        transition: transform .55s var(--spring), box-shadow .45s var(--ease), background-color .4s var(--ease), opacity .3s;
+    }
+    /* Reflet de surface en haut du bouton */
+    button.bg-brand-red::before {
+        content: "";
+        position: absolute;
+        z-index: -1;
+        left: 6%;
+        right: 6%;
+        top: 3%;
+        height: 48%;
+        border-radius: 999px;
+        background: linear-gradient(180deg, rgba(255, 255, 255, 0.50), rgba(255, 255, 255, 0.08));
+        pointer-events: none;
+    }
+    /* Reflet qui glisse au survol */
+    button.bg-brand-red::after {
+        content: "";
+        position: absolute;
+        z-index: -1;
+        top: 0;
+        bottom: 0;
+        left: -60%;
+        width: 45%;
+        background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+        transform: translateX(0) skewX(-18deg);
+        opacity: 0;
+        transition: transform .9s var(--ease), opacity .4s var(--ease);
+        pointer-events: none;
+    }
+    button.bg-brand-red:not(:disabled):hover {
+        background-color: rgba(135, 10, 10, 0.78);
+        background-image:
+            radial-gradient(120% 90% at 50% 135%, rgba(255, 110, 95, 0.7), transparent 62%),
+            linear-gradient(180deg, rgba(225, 55, 55, 0.82) 0%, rgba(158, 14, 14, 0.76) 50%, rgba(100, 6, 6, 0.88) 100%);
+        transform: translateY(-1px) scale(1.015);
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.65),
+            inset 0 0 0 1px rgba(255, 255, 255, 0.14),
+            inset 0 -10px 16px -8px rgba(255, 80, 70, 0.55),
+            0 14px 30px -8px rgba(220, 12, 12, 0.8),
+            0 6px 14px -2px rgba(0, 0, 0, 0.55);
+    }
+    button.bg-brand-red:not(:disabled):hover::after {
+        transform: translateX(380%) skewX(-18deg);
+        opacity: 1;
+    }
+    button.bg-brand-red:not(:disabled):active {
+        transform: scale(0.96, 0.92);
+        transition-duration: .12s;
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.4),
+            inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+            inset 0 -6px 12px -6px rgba(255, 70, 60, 0.4),
+            0 4px 14px -6px rgba(200, 10, 10, 0.6);
+    }
+    button.bg-brand-red:disabled {
+        cursor: not-allowed;
+        transform: scale(0.98);
+        box-shadow:
+            inset 0 1px 0 rgba(255, 255, 255, 0.3),
+            inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+            0 4px 10px -4px rgba(0, 0, 0, 0.5);
+    }
+    /* Barre de progression en verre rouge */
+    #gen-progress {
+        border-radius: 999px;
+        background-image: linear-gradient(180deg, rgba(235, 70, 60, 0.95), rgba(180, 18, 18, 0.95) 55%, rgba(110, 6, 6, 0.95));
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+    }
+
+    /* Choix du moteur */
+    button[aria-pressed] {
+        transition: transform .4s var(--spring), border-color .35s var(--ease), background-color .35s var(--ease), box-shadow .45s var(--ease);
+    }
+    button[aria-pressed]:active { transform: scale(.98); }
+    button[aria-pressed="true"] {
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 12px 30px -14px rgba(255, 16, 16, 0.6);
+    }
+
+    /* Champs de saisie en creux */
+    input.bg-brand-black, textarea.bg-brand-black {
+        background-color: rgba(0, 0, 0, 0.4);
+        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.55), 0 1px 0 rgba(255, 255, 255, 0.05);
+        transition: border-color .3s var(--ease), box-shadow .35s var(--ease), background-color .3s var(--ease);
+    }
+    input.bg-brand-black:focus, textarea.bg-brand-black:focus {
+        background-color: rgba(0, 0, 0, 0.5);
+        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.55), 0 0 0 3px rgba(255, 16, 16, 0.2);
+    }
+
+    /* Entrées en douceur */
+    .view-enter { animation: view-in .6s var(--ease) backwards; }
+    .view-enter .glass-card { animation: card-in .7s var(--ease) backwards; }
+    .view-enter .glass-card:nth-child(2) { animation-delay: .07s; }
+    .view-enter .glass-card:nth-child(3) { animation-delay: .14s; }
+    .view-enter .glass-card:nth-child(4) { animation-delay: .21s; }
+    #auth-modal:not(.hidden) > .glass-card { animation: pop .5s var(--spring) backwards; }
+    @keyframes view-in { from { transform: translateY(14px) scale(0.995); } }
+    @keyframes card-in { from { opacity: 0; transform: translateY(18px) scale(0.985); } }
+    @keyframes pop { from { opacity: 0; transform: translateY(12px) scale(0.94); } }
+
+    @media (prefers-reduced-motion: reduce) {
+        * { transition: none !important; animation: none !important; }
+    }
+</style>
+
 </head>
-<body class="min-h-screen flex flex-col justify-between selection:bg-brand-red selection:text-white">
+<body>
+<!-- Icônes -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <defs>
+        <symbol id="i-key" viewBox="0 0 24 24"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/></symbol>
+        <symbol id="i-logout" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></symbol>
+        <symbol id="i-x" viewBox="0 0 24 24"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></symbol>
+        <symbol id="i-check-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></symbol>
+        <symbol id="i-circle" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/></symbol>
+        <symbol id="i-check" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></symbol>
+        <symbol id="i-sparkles" viewBox="0 0 24 24"><path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.581a.5.5 0 0 1 0 .964L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0z"/><path d="M20 3v4"/><path d="M22 5h-4"/><path d="M4 17v2"/><path d="M5 18H3"/></symbol>
+        <symbol id="i-film" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M7 3v18"/><path d="M3 7.5h4"/><path d="M3 12h18"/><path d="M3 16.5h4"/><path d="M17 3v18"/><path d="M17 7.5h4"/><path d="M17 16.5h4"/></symbol>
+        <symbol id="i-tag" viewBox="0 0 24 24"><path d="M12.586 2.586A2 2 0 0 0 11.172 2H4a2 2 0 0 0-2 2v7.172a2 2 0 0 0 .586 1.414l8.704 8.704a2.426 2.426 0 0 0 3.42 0l6.58-6.58a2.426 2.426 0 0 0 0-3.42z"/><circle cx="7.5" cy="7.5" r=".5" fill="currentColor"/></symbol>
+        <symbol id="i-play" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3" fill="currentColor"/></symbol>
+        <symbol id="i-trash" viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></symbol>
+    </defs>
+</svg>
+
+<div class="ambient" aria-hidden="true"><i class="a1"></i><i class="a2"></i><i class="a3"></i></div>
+
+<div id="app" class="selection:bg-brand-red selection:text-white">
 
     <!-- HEADER / NAVIGATION -->
-    <header class="sticky top-0 z-40 w-full glass-card border-b border-brand-border px-4 lg:px-8 py-3 flex items-center justify-between">
-        <!-- LOGO BRAND -->
-        <div class="flex items-center space-x-2 cursor-pointer select-none" onclick="switchView('landing')">
-            <div class="flex items-center space-x-3">
-                <svg width="34" height="34" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <header class="site-header">
+        <div class="gutter header-inner">
+            <!-- LOGO BRAND -->
+            <button type="button" onclick="switchView('landing')" class="flex items-center space-x-3 select-none cursor-pointer" aria-label="Accueil VidioAI">
+                <svg width="34" height="34" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                     <path d="M15 20 C 35 20, 45 80, 55 80 C 65 80, 80 30, 90 35" stroke="#FF1010" stroke-width="16" stroke-linecap="round"/>
                     <polygon points="62,40 62,65 82,52.5" fill="#FFFFFF"/>
                 </svg>
                 <span class="text-xl font-black tracking-wider text-white">Vidio<span class="text-brand-red">AI</span></span>
+            </button>
+
+            <!-- DESKTOP NAV -->
+            <nav class="hidden md:flex items-center space-x-6 text-xs font-semibold" aria-label="Navigation principale">
+                <button type="button" data-nav="generator" onclick="switchView('generator')" class="nav-link cursor-pointer">Générateur</button>
+                <button type="button" data-nav="my-creations" onclick="switchView('my-creations')" class="nav-link cursor-pointer">Mes Créations</button>
+                <button type="button" data-nav="pricing" onclick="switchView('pricing')" class="nav-link cursor-pointer">Tarifs</button>
+                <button type="button" data-nav="settings" onclick="switchView('settings')" class="nav-link cursor-pointer inline-flex items-center gap-1.5"><svg class="icon" aria-hidden="true"><use href="#i-key"/></svg> Clés API</button>
+            </nav>
+
+            <!-- USER / AUTH BUTTONS -->
+            <div id="auth-buttons" class="flex items-center space-x-3">
+                <button type="button" onclick="openAuthModal('login')" class="text-xs text-brand-graySub hover:text-white font-medium px-3 py-1.5 transition-colors">Connexion</button>
+                <button type="button" onclick="openAuthModal('signup')" class="bg-brand-red hover:bg-brand-redHover text-white text-xs font-semibold px-4 py-1.5 rounded-lg transition-colors red-glow-subtle">Inscription</button>
             </div>
-        </div>
 
-        <!-- DESKTOP NAV -->
-        <nav class="hidden md:flex items-center space-x-6 text-xs font-semibold text-brand-graySub">
-            <button type="button" onclick="switchView('generator')" class="hover:text-white transition-colors cursor-pointer">Générateur</button>
-            <button type="button" onclick="switchView('my-creations')" class="hover:text-white transition-colors cursor-pointer">Mes Créations</button>
-            <button type="button" onclick="switchView('pricing')" class="hover:text-white transition-colors cursor-pointer">Tarifs</button>
-            <button type="button" onclick="switchView('settings')" class="hover:text-white transition-colors cursor-pointer"><i class="fa-solid fa-gear mr-1"></i> Clés API</button>
-        </nav>
-
-        <!-- USER / AUTH BUTTONS -->
-        <div id="auth-buttons" class="flex items-center space-x-3">
-            <button onclick="openAuthModal('login')" class="text-xs text-brand-graySub hover:text-white font-medium px-3 py-1.5 transition-colors">Connexion</button>
-            <button onclick="openAuthModal('signup')" class="bg-brand-red hover:bg-brand-redHover text-white text-xs font-semibold px-4 py-1.5 rounded-lg transition-colors red-glow-subtle">Inscription</button>
-        </div>
-
-        <div id="user-profile" class="hidden flex items-center space-x-3">
-            <span id="user-name" class="text-xs font-semibold text-white"></span>
-            <button onclick="logout()" class="text-xs text-brand-graySub hover:text-brand-red transition-colors"><i class="fa-solid fa-right-from-bracket"></i></button>
+            <div id="user-profile" class="hidden flex items-center space-x-3">
+                <span id="user-name" class="text-xs font-semibold text-white truncate" style="max-width: 40vw"></span>
+                <button type="button" onclick="logout()" class="text-brand-graySub hover:text-brand-red transition-colors p-1" aria-label="Se déconnecter"><svg class="icon" style="font-size:16px" aria-hidden="true"><use href="#i-logout"/></svg></button>
+            </div>
         </div>
     </header>
 
     <!-- CONTENT VIEWS CONTAINER -->
-    <main class="flex-grow max-w-7xl w-full mx-auto p-4 md:p-8">
-        
+    <main class="flex-grow w-full max-w-7xl mx-auto gutter main-pad">
+
         <!-- MODAL AUTHENTIFICATION -->
-        <div id="auth-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
-            <div class="glass-card rounded-2xl p-6 md:p-8 max-w-md w-full relative">
-                <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-brand-graySub hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
-                
+        <div id="auth-modal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden flex items-center justify-center p-4" onclick="if (event.target === this) closeAuthModal()">
+            <div class="glass-card rounded-2xl p-6 md:p-8 max-w-md w-full relative" role="dialog" aria-modal="true" aria-labelledby="auth-title">
+                <button type="button" onclick="closeAuthModal()" class="absolute top-4 right-4 text-brand-graySub hover:text-white" aria-label="Fermer"><svg class="icon" style="font-size:20px" aria-hidden="true"><use href="#i-x"/></svg></button>
+
                 <h2 id="auth-title" class="text-2xl font-bold text-white mb-2">Connexion</h2>
                 <p id="auth-subtitle" class="text-xs text-brand-graySub mb-6">Accédez à votre espace VidioAI</p>
 
-                <div id="auth-error" class="hidden mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs"></div>
+                <div id="auth-error" class="hidden mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs" role="alert"></div>
 
                 <form onsubmit="handleAuthSubmit(event)" class="space-y-4">
                     <div>
-                        <label class="block text-xs font-medium text-brand-graySub mb-1">Nom d'utilisateur</label>
-                        <input type="text" id="auth-username" required class="w-full bg-brand-black border border-brand-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-red">
+                        <label for="auth-username" class="block text-xs font-medium text-brand-graySub mb-1">Nom d'utilisateur</label>
+                        <input type="text" id="auth-username" required autocomplete="username" autocapitalize="none" class="w-full bg-brand-black border border-brand-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-red">
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-brand-graySub mb-1">Mot de passe</label>
-                        <input type="password" id="auth-password" required class="w-full bg-brand-black border border-brand-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-red">
+                        <label for="auth-password" class="block text-xs font-medium text-brand-graySub mb-1">Mot de passe</label>
+                        <input type="password" id="auth-password" required autocomplete="current-password" class="w-full bg-brand-black border border-brand-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-red">
                     </div>
                     <button type="submit" id="auth-submit-btn" class="w-full bg-brand-red hover:bg-brand-redHover font-semibold py-2.5 rounded-lg text-sm text-white red-glow">Se connecter</button>
                 </form>
 
                 <p class="text-xs text-center text-brand-graySub mt-4">
                     <span id="auth-switch-text">Vous n'avez pas de compte ?</span>
-                    <button onclick="toggleAuthMode()" id="auth-switch-btn" class="text-brand-red font-medium ml-1">S'inscrire</button>
+                    <button type="button" onclick="toggleAuthMode()" id="auth-switch-btn" class="text-brand-red font-medium ml-1">S'inscrire</button>
                 </p>
             </div>
         </div>
 
         <!-- APP CONTENT VIEWS -->
         <div id="view-landing" class="py-12 text-center space-y-6">
-            <h1 class="text-4xl md:text-6xl font-black tracking-tight text-white">Créez des vidéos IA extraordinaires en un instant.</h1>
-            <p class="text-brand-graySub max-w-2xl mx-auto text-sm md:text-base">Generez, éditez et personnalisez vos contenus multimédias instantanément.</p>
-            <button onclick="switchView('generator')" class="bg-brand-red hover:bg-brand-redHover px-8 py-3.5 rounded-xl font-bold text-sm text-white red-glow transition-all">Lancer le Générateur</button>
+            <h1 class="text-4xl md:text-6xl font-black tracking-tight text-white" style="text-wrap: balance">Créez des vidéos IA extraordinaires en un instant.</h1>
+            <p class="text-brand-graySub max-w-2xl mx-auto text-sm md:text-base">Générez, éditez et personnalisez vos contenus multimédias instantanément.</p>
+            <button type="button" onclick="switchView('generator')" class="bg-brand-red hover:bg-brand-redHover px-8 py-3.5 rounded-xl font-bold text-sm text-white red-glow transition-all">Lancer le Générateur</button>
         </div>
 
         <div id="view-generator" class="hidden space-y-6">
             <h2 class="text-xl font-bold">Générateur Vidéo AI</h2>
-            
+
             <!-- Choix du moteur AI -->
             <div class="glass-card p-6 rounded-xl space-y-4">
-                <label class="block text-xs font-semibold text-brand-graySub">Choisissez le moteur de génération :</label>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <button type="button" id="btn-provider-replicate" onclick="selectProvider('replicate')" class="p-4 rounded-xl border border-brand-red bg-brand-red/10 flex items-center justify-between text-left transition-all">
-                        <div>
+                <p id="provider-label" class="block text-xs font-semibold text-brand-graySub">Choisissez le moteur de génération :</p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4" role="group" aria-labelledby="provider-label">
+                    <button type="button" id="btn-provider-replicate" aria-pressed="true" onclick="selectProvider('replicate')" class="p-4 rounded-xl border border-brand-red bg-brand-red/10 flex items-center justify-between gap-3 text-left transition-all">
+                        <div class="min-w-0">
                             <div class="font-bold text-sm text-white">Replicate API</div>
-                            <div class="text-[11px] text-brand-graySub">Exécution de modèles open-source (Sora/WAN, Stable Video)</div>
+                            <div class="text-[11px] text-brand-graySub">Modèles vidéo hébergés sur Replicate (Wan par défaut)</div>
                         </div>
-                        <i id="icon-replicate" class="fa-solid fa-circle-check text-brand-red"></i>
+                        <svg id="icon-replicate" class="icon text-brand-red" style="font-size:18px" aria-hidden="true"><use href="#i-check-circle"/></svg>
                     </button>
 
-                    <button type="button" id="btn-provider-luma" onclick="selectProvider('luma')" class="p-4 rounded-xl border border-brand-border bg-brand-black/50 flex items-center justify-between text-left transition-all hover:border-brand-graySub">
-                        <div>
+                    <button type="button" id="btn-provider-luma" aria-pressed="false" onclick="selectProvider('luma')" class="p-4 rounded-xl border border-brand-border bg-brand-black/50 flex items-center justify-between gap-3 text-left transition-all hover:border-brand-graySub">
+                        <div class="min-w-0">
                             <div class="font-bold text-sm text-white">Luma AI (Lunalabs)</div>
                             <div class="text-[11px] text-brand-graySub">Moteur Dream Machine cinématique de haute qualité</div>
                         </div>
-                        <i id="icon-luma" class="fa-regular fa-circle text-brand-graySub"></i>
+                        <svg id="icon-luma" class="icon text-brand-graySub" style="font-size:18px" aria-hidden="true"><use href="#i-circle"/></svg>
                     </button>
                 </div>
 
                 <!-- Input Clé API contextuel -->
                 <div class="pt-2">
-                    <label id="key-label" class="block text-xs font-medium text-brand-graySub mb-1">Clé API Replicate</label>
-                    <input type="password" id="api-key-input" placeholder="Entrez votre clé d'accès (ex: r8_... ou luma-...)" class="w-full bg-brand-black border border-brand-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-red">
+                    <label id="key-label" for="api-key-input" class="block text-xs font-medium text-brand-graySub mb-1">Clé API Replicate (ex: r8_...)</label>
+                    <input type="password" id="api-key-input" autocomplete="off" placeholder="Entrez votre clé d'accès (ex: r8_... ou luma-...)" class="w-full bg-brand-black border border-brand-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-red">
                     <p class="text-[10px] text-brand-graySub mt-1">La clé est enregistrée sur votre compte localement.</p>
                 </div>
 
                 <div>
-                    <label class="block text-xs font-medium text-brand-graySub mb-1">Prompt / Description de la vidéo</label>
-                    <textarea id="prompt-input" rows="4" placeholder="Un astronaute marchand sur Mars au coucher du soleil, style cinématographique 4k..." class="w-full bg-brand-black border border-brand-border rounded-lg p-3 text-sm text-white focus:outline-none focus:border-brand-red"></textarea>
+                    <label for="prompt-input" class="block text-xs font-medium text-brand-graySub mb-1">Prompt / Description de la vidéo</label>
+                    <textarea id="prompt-input" rows="4" maxlength="1000" placeholder="Un astronaute marchant sur Mars au coucher du soleil, style cinématographique 4k..." class="w-full bg-brand-black border border-brand-border rounded-lg p-3 text-sm text-white focus:outline-none focus:border-brand-red"></textarea>
+                </div>
+
+                <p id="preview-note" class="hidden text-[11px] text-brand-graySub">Mode aperçu : la génération est simulée et aucune vidéo n'est produite tant que le site n'est pas relié à son serveur (voir le README).</p>
+
+                <div id="gen-status" class="hidden rounded-lg p-4 space-y-3" role="status" aria-live="polite">
+                    <p id="gen-status-text" class="text-xs font-medium text-white"></p>
+                    <div id="gen-progress-wrap" class="h-1.5 rounded-full bg-brand-border overflow-hidden">
+                        <div id="gen-progress" class="h-full bg-brand-red" style="width:0%; transition: width .5s ease"></div>
+                    </div>
+                    <button type="button" id="gen-status-action" onclick="switchView('my-creations')" class="hidden text-xs font-semibold text-brand-red hover:text-white transition-colors">Voir mes créations</button>
                 </div>
 
                 <div class="flex items-center justify-end space-x-3">
-                    <button onclick="generateVideo()" class="bg-brand-red hover:bg-brand-redHover px-6 py-2.5 rounded-lg font-semibold text-xs text-white red-glow transition-all flex items-center space-x-2">
-                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    <button type="button" id="generate-btn" onclick="generateVideo()" class="bg-brand-red hover:bg-brand-redHover px-6 py-2.5 rounded-lg font-semibold text-xs text-white red-glow transition-all flex items-center space-x-2">
+                        <svg class="icon" style="font-size:14px" aria-hidden="true"><use href="#i-sparkles"/></svg>
                         <span>Générer avec <span id="current-provider-name">Replicate</span></span>
                     </button>
                 </div>
@@ -187,162 +569,542 @@
 
         <div id="view-pricing" class="hidden space-y-6 text-center py-6">
             <h2 class="text-2xl font-bold text-white mb-2">Nos Offres</h2>
-            <p class="text-xs text-brand-graySub mb-8">Utilisez vos propres clés API sans surcoût ou optez pour nos crédits illimités.</p>
+            <p class="text-xs text-brand-graySub mb-8">Utilisez vos propres clés API sans surcoût. L'offre Pro Studio arrive bientôt.</p>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-3xl mx-auto">
                 <div class="glass-card p-6 rounded-2xl border border-brand-border text-left space-y-4">
                     <h3 class="font-bold text-lg text-white">Bring Your Own Key (BYOK)</h3>
                     <div class="text-3xl font-black text-white">0€ <span class="text-xs font-normal text-brand-graySub">/mois</span></div>
                     <ul class="text-xs text-brand-graySub space-y-2">
-                        <li><i class="fa-solid fa-check text-brand-red mr-2"></i> Support clé Replicate API</li>
-                        <li><i class="fa-solid fa-check text-brand-red mr-2"></i> Support clé Luma AI (Lunalabs)</li>
-                        <li><i class="fa-solid fa-check text-brand-red mr-2"></i> Sauvegarde locale illimitée</li>
+                        <li class="flex items-center"><svg class="icon text-brand-red mr-2" aria-hidden="true"><use href="#i-check"/></svg> Support clé Replicate API</li>
+                        <li class="flex items-center"><svg class="icon text-brand-red mr-2" aria-hidden="true"><use href="#i-check"/></svg> Support clé Luma AI (Lunalabs)</li>
+                        <li class="flex items-center"><svg class="icon text-brand-red mr-2" aria-hidden="true"><use href="#i-check"/></svg> Sauvegarde locale illimitée</li>
                     </ul>
                 </div>
                 <div class="glass-card p-6 rounded-2xl border border-brand-red red-glow-subtle text-left space-y-4">
-                    <h3 class="font-bold text-lg text-white">Pro Studio</h3>
+                    <div class="flex items-center justify-between gap-3">
+                        <h3 class="font-bold text-lg text-white">Pro Studio</h3>
+                        <span class="text-[10px] font-semibold uppercase tracking-wider text-brand-graySub border border-brand-border rounded-full px-2 py-0.5">Bientôt</span>
+                    </div>
                     <div class="text-3xl font-black text-brand-red">19.99€ <span class="text-xs font-normal text-brand-graySub">/mois</span></div>
                     <ul class="text-xs text-brand-graySub space-y-2">
-                        <li><i class="fa-solid fa-check text-brand-red mr-2"></i> Clés fournies et gérées</li>
-                        <li><i class="fa-solid fa-check text-brand-red mr-2"></i> Génération prioritaire ultra-rapide</li>
-                        <li><i class="fa-solid fa-check text-brand-red mr-2"></i> Rendu HD & 4K sans filigrane</li>
+                        <li class="flex items-center"><svg class="icon text-brand-red mr-2" aria-hidden="true"><use href="#i-check"/></svg> Clés fournies et gérées</li>
+                        <li class="flex items-center"><svg class="icon text-brand-red mr-2" aria-hidden="true"><use href="#i-check"/></svg> Génération prioritaire ultra-rapide</li>
+                        <li class="flex items-center"><svg class="icon text-brand-red mr-2" aria-hidden="true"><use href="#i-check"/></svg> Rendu HD &amp; 4K sans filigrane</li>
                     </ul>
                 </div>
             </div>
         </div>
+
+        <div id="view-settings" class="hidden space-y-6 max-w-2xl">
+            <div>
+                <h2 class="text-xl font-bold">Clés API</h2>
+                <p class="text-xs text-brand-graySub mt-1">Une clé par moteur. Elle sera préremplie dans le générateur.</p>
+            </div>
+
+            <div id="settings-guard" class="hidden glass-card p-6 rounded-xl space-y-3">
+                <p class="text-sm text-white">Connectez-vous pour enregistrer vos clés.</p>
+                <button type="button" onclick="openAuthModal('login')" class="bg-brand-red hover:bg-brand-redHover px-5 py-2 rounded-lg font-semibold text-xs text-white">Connexion</button>
+            </div>
+
+            <form id="settings-form" onsubmit="saveSettings(event)" class="glass-card p-6 rounded-xl space-y-5">
+                <div>
+                    <label for="settings-key-replicate" class="block text-xs font-medium text-brand-graySub mb-1">Clé API Replicate</label>
+                    <div class="flex gap-2">
+                        <input type="password" id="settings-key-replicate" autocomplete="off" placeholder="r8_..." class="min-w-0 flex-1 bg-brand-black border border-brand-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-red">
+                        <button type="button" onclick="toggleReveal('settings-key-replicate', this)" class="shrink-0 text-xs font-medium text-brand-graySub hover:text-white border border-brand-border rounded-lg px-3">Afficher</button>
+                    </div>
+                </div>
+                <div>
+                    <label for="settings-key-luma" class="block text-xs font-medium text-brand-graySub mb-1">Clé API Luma AI (Lunalabs)</label>
+                    <div class="flex gap-2">
+                        <input type="password" id="settings-key-luma" autocomplete="off" placeholder="luma-..." class="min-w-0 flex-1 bg-brand-black border border-brand-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-red">
+                        <button type="button" onclick="toggleReveal('settings-key-luma', this)" class="shrink-0 text-xs font-medium text-brand-graySub hover:text-white border border-brand-border rounded-lg px-3">Afficher</button>
+                    </div>
+                </div>
+                <div class="flex items-center justify-between gap-4">
+                    <p id="settings-msg" class="text-xs text-brand-graySub" role="status" aria-live="polite"></p>
+                    <button type="submit" class="shrink-0 bg-brand-red hover:bg-brand-redHover px-5 py-2 rounded-lg font-semibold text-xs text-white red-glow">Enregistrer</button>
+                </div>
+            </form>
+
+            <p class="text-[11px] text-brand-graySub">Les clés restent dans le navigateur de cet appareil, sans chiffrement. N'utilisez pas cette page sur un appareil partagé.</p>
+        </div>
     </main>
 
-    <script>
-        // AUTH & STORAGE SYSTEM
-        let currentMode = 'login';
-        let selectedProvider = 'replicate'; // 'replicate' ou 'luma'
-        let currentUser = JSON.parse(localStorage.getItem('vidioai_session')) || null;
+    <!-- NAVIGATION MOBILE -->
+    <nav class="mobile-nav" aria-label="Navigation mobile">
+        <button type="button" data-nav="generator" onclick="switchView('generator')"><svg class="icon" aria-hidden="true"><use href="#i-sparkles"/></svg><span>Générateur</span></button>
+        <button type="button" data-nav="my-creations" onclick="switchView('my-creations')"><svg class="icon" aria-hidden="true"><use href="#i-film"/></svg><span>Créations</span></button>
+        <button type="button" data-nav="pricing" onclick="switchView('pricing')"><svg class="icon" aria-hidden="true"><use href="#i-tag"/></svg><span>Tarifs</span></button>
+        <button type="button" data-nav="settings" onclick="switchView('settings')"><svg class="icon" aria-hidden="true"><use href="#i-key"/></svg><span>Clés API</span></button>
+    </nav>
+</div>
 
-        function updateUI() {
-            const authBtns = document.getElementById('auth-buttons');
-            const userProf = document.getElementById('user-profile');
-            const userName = document.getElementById('user-name');
+<script>
+    // Adresse du serveur de génération (app.py).
+    // Laissez vide si le site est servi par app.py lui-même. Sinon, mettez son adresse, par exemple 'https://mon-serveur.example.com'.
+    // Si aucun serveur ne répond, le site passe en mode aperçu (génération simulée).
+    const BACKEND_URL = '';
+    let apiBase = null; // null = mode aperçu
 
-            if (currentUser) {
-                authBtns.classList.add('hidden');
-                userProf.classList.remove('hidden');
-                userName.textContent = currentUser.username;
-                loadUserCreations();
-                loadUserKeys();
-            } else {
-                authBtns.classList.remove('hidden');
-                userProf.classList.add('hidden');
-            }
+    async function detectBackend() {
+        const base = BACKEND_URL.replace(/\/+$/, '');
+        const ctrl = new AbortController();
+        const timer = setTimeout(() => ctrl.abort(), 4000);
+        try {
+            const res = await fetch(base + '/api/health', { signal: ctrl.signal });
+            const data = await res.json();
+            apiBase = (res.ok && data && data.ok === true) ? base : null;
+        } catch (e) {
+            apiBase = null;
+        } finally {
+            clearTimeout(timer);
         }
+        document.getElementById('preview-note').classList.toggle('hidden', apiBase !== null);
+    }
+    const backendReady = detectBackend();
 
-        function selectProvider(provider) {
-            selectedProvider = provider;
-            const btnRep = document.getElementById('btn-provider-replicate');
-            const btnLuma = document.getElementById('btn-provider-luma');
-            const iconRep = document.getElementById('icon-replicate');
-            const iconLuma = document.getElementById('icon-luma');
-            const keyLabel = document.getElementById('key-label');
-            const providerName = document.getElementById('current-provider-name');
+    const PROVIDERS = { replicate: 'Replicate', luma: 'Luma AI' };
+    const VIEWS = ['landing', 'generator', 'my-creations', 'pricing', 'settings'];
 
-            if (provider === 'replicate') {
-                btnRep.className = 'p-4 rounded-xl border border-brand-red bg-brand-red/10 flex items-center justify-between text-left transition-all';
-                btnLuma.className = 'p-4 rounded-xl border border-brand-border bg-brand-black/50 flex items-center justify-between text-left transition-all hover:border-brand-graySub';
-                iconRep.className = 'fa-solid fa-circle-check text-brand-red';
-                iconLuma.className = 'fa-regular fa-circle text-brand-graySub';
-                keyLabel.textContent = 'Clé API Replicate (ex: r8_...)';
-                providerName.textContent = 'Replicate';
-            } else {
-                btnLuma.className = 'p-4 rounded-xl border border-brand-red bg-brand-red/10 flex items-center justify-between text-left transition-all';
-                btnRep.className = 'p-4 rounded-xl border border-brand-border bg-brand-black/50 flex items-center justify-between text-left transition-all hover:border-brand-graySub';
-                iconLuma.className = 'fa-solid fa-circle-check text-brand-red';
-                iconRep.className = 'fa-regular fa-circle text-brand-graySub';
-                keyLabel.textContent = 'Clé API Luma AI / Lunalabs (ex: luma-...)';
-                providerName.textContent = 'Luma AI';
-            }
-            loadUserKeys();
+    // STOCKAGE : localStorage si disponible, mémoire sinon
+    const memoryStore = {};
+    const store = {
+        get(key, fallback) {
+            try {
+                const raw = localStorage.getItem(key);
+                if (raw !== null) return JSON.parse(raw);
+            } catch (e) {}
+            return key in memoryStore ? JSON.parse(memoryStore[key]) : fallback;
+        },
+        set(key, value) {
+            const raw = JSON.stringify(value);
+            memoryStore[key] = raw;
+            try { localStorage.setItem(key, raw); } catch (e) {}
+        },
+        remove(key) {
+            delete memoryStore[key];
+            try { localStorage.removeItem(key); } catch (e) {}
         }
+    };
 
-        function loadUserKeys() {
-            if (!currentUser) return;
-            let users = JSON.parse(localStorage.getItem('vidioai_users')) || {};
-            const userData = users[currentUser.username] || {};
-            const keys = userData.keys || {};
-            const keyInput = document.getElementById('api-key-input');
-            if (keyInput) {
-                keyInput.value = keys[selectedProvider] || '';
-            }
+    function getUsers() { return store.get('vidioai_users', {}) || {}; }
+    function saveUsers(users) { store.set('vidioai_users', users); }
+    function hasUser(users, name) { return Object.prototype.hasOwnProperty.call(users, name); }
+
+    async function hashPassword(pw) {
+        try {
+            const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('vidioai:' + pw));
+            return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+        } catch (e) {
+            return 'plain:' + pw;
         }
+    }
 
-        function openAuthModal(mode) {
-            currentMode = mode;
-            document.getElementById('auth-modal').classList.remove('hidden');
-            document.getElementById('auth-error').classList.add('hidden');
-            document.getElementById('auth-title').textContent = mode === 'login' ? 'Connexion' : 'Inscription';
-            document.getElementById('auth-submit-btn').textContent = mode === 'login' ? 'Se connecter' : "S'inscrire";
-            document.getElementById('auth-switch-text').textContent = mode === 'login' ? "Vous n'avez pas de compte ?" : "Vous avez déjà un compte ?";
-            document.getElementById('auth-switch-btn').textContent = mode === 'login' ? "S'inscrire" : "Se connecter";
+    function esc(s) {
+        return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+    function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+    // AUTH & STATE
+    let currentMode = 'login';
+    let selectedProvider = 'replicate'; // 'replicate' ou 'luma'
+    let currentUser = store.get('vidioai_session', null);
+    let generating = false;
+    let viewTimer;
+
+    function updateUI() {
+        const authBtns = document.getElementById('auth-buttons');
+        const userProf = document.getElementById('user-profile');
+        const userName = document.getElementById('user-name');
+
+        if (currentUser) {
+            authBtns.classList.add('hidden');
+            userProf.classList.remove('hidden');
+            userName.textContent = currentUser.username;
+        } else {
+            authBtns.classList.remove('hidden');
+            userProf.classList.add('hidden');
+            userName.textContent = '';
         }
+        loadUserCreations();
+        loadUserKeys();
+        const loggedIn = !!currentUser;
+        document.getElementById('settings-guard').classList.toggle('hidden', loggedIn);
+        document.getElementById('settings-form').classList.toggle('hidden', !loggedIn);
+    }
 
-        function closeAuthModal() {
-            document.getElementById('auth-modal').classList.add('hidden');
-        }
+    function selectProvider(provider) {
+        selectedProvider = provider;
+        const btnRep = document.getElementById('btn-provider-replicate');
+        const btnLuma = document.getElementById('btn-provider-luma');
+        const iconRep = document.getElementById('icon-replicate');
+        const iconLuma = document.getElementById('icon-luma');
+        const keyLabel = document.getElementById('key-label');
+        const providerName = document.getElementById('current-provider-name');
 
-        function toggleAuthMode() {
-            openAuthModal(currentMode === 'login' ? 'signup' : 'login');
-        }
+        const onBtn = 'p-4 rounded-xl border border-brand-red bg-brand-red/10 flex items-center justify-between gap-3 text-left transition-all';
+        const offBtn = 'p-4 rounded-xl border border-brand-border bg-brand-black/50 flex items-center justify-between gap-3 text-left transition-all hover:border-brand-graySub';
+        const setIcon = (el, on) => {
+            el.setAttribute('class', 'icon ' + (on ? 'text-brand-red' : 'text-brand-graySub'));
+            el.firstElementChild.setAttribute('href', on ? '#i-check-circle' : '#i-circle');
+        };
 
-        function handleAuthSubmit(e) {
-            e.preventDefault();
-            const username = document.getElementById('auth-username').value.trim();
-            const password = document.getElementById('auth-password').value;
-            const errorDiv = document.getElementById('auth-error');
+        const isRep = provider === 'replicate';
+        btnRep.className = isRep ? onBtn : offBtn;
+        btnLuma.className = isRep ? offBtn : onBtn;
+        btnRep.setAttribute('aria-pressed', String(isRep));
+        btnLuma.setAttribute('aria-pressed', String(!isRep));
+        setIcon(iconRep, isRep);
+        setIcon(iconLuma, !isRep);
+        iconRep.style.fontSize = iconLuma.style.fontSize = '18px';
+        keyLabel.textContent = isRep ? 'Clé API Replicate (ex: r8_...)' : 'Clé API Luma AI / Lunalabs (ex: luma-...)';
+        providerName.textContent = PROVIDERS[provider];
+        loadUserKeys();
+    }
 
-            let users = JSON.parse(localStorage.getItem('vidioai_users')) || {};
+    function currentKeys() {
+        if (!currentUser) return {};
+        const userData = getUsers()[currentUser.username] || {};
+        return userData.keys || {};
+    }
 
-            if (currentMode === 'signup') {
-                if (users[username]) {
-                    errorDiv.textContent = "Ce nom d'utilisateur existe déjà.";
-                    errorDiv.classList.remove('hidden');
-                    return;
-                }
-                users[username] = { password, creations: [], keys: { replicate: '', luma: '' } };
-                localStorage.setItem('vidioai_users', JSON.stringify(users));
-                currentUser = { username };
-                localStorage.setItem('vidioai_session', JSON.stringify(currentUser));
-                closeAuthModal();
-                updateUI();
-            } else {
-                if (!users[username] || users[username].password !== password) {
-                    errorDiv.textContent = "Nom d'utilisateur ou mot de passe incorrect.";
-                    errorDiv.classList.remove('hidden');
-                    return;
-                }
-                currentUser = { username };
-                localStorage.setItem('vidioai_session', JSON.stringify(currentUser));
-                closeAuthModal();
-                updateUI();
-            }
-        }
+    function loadUserKeys() {
+        const keys = currentKeys();
+        document.getElementById('api-key-input').value = keys[selectedProvider] || '';
+        document.getElementById('settings-key-replicate').value = keys.replicate || '';
+        document.getElementById('settings-key-luma').value = keys.luma || '';
+    }
 
-        function logout() {
-            currentUser = null;
-            localStorage.removeItem('vidioai_session');
-            updateUI();
-            switchView('landing');
-        }
+    function saveKey(provider, value) {
+        if (!currentUser) return;
+        const users = getUsers();
+        const user = users[currentUser.username];
+        if (!user) return;
+        user.keys = Object.assign({ replicate: '', luma: '' }, user.keys, { [provider]: value });
+        saveUsers(users);
+    }
 
-        function switchView(viewName) {
-            ['landing', 'generator', 'my-creations', 'pricing'].forEach(v => {
-                const el = document.getElementById('view-' + v);
-                if (el) el.classList.add('hidden');
-            });
-            const active = document.getElementById('view-' + viewName);
-            if (active) active.classList.remove('hidden');
-        }
+    function saveSettings(e) {
+        e.preventDefault();
+        if (!currentUser) { openAuthModal('login'); return; }
+        saveKey('replicate', document.getElementById('settings-key-replicate').value.trim());
+        saveKey('luma', document.getElementById('settings-key-luma').value.trim());
+        loadUserKeys();
+        const msg = document.getElementById('settings-msg');
+        msg.textContent = 'Clés enregistrées.';
+        msg.style.color = 'var(--ok)';
+        setTimeout(() => { msg.textContent = ''; }, 3000);
+    }
 
-        function generateVideo() {
-            if (!currentUser) {
-                openAuthModal('login');
+    function toggleReveal(inputId, btn) {
+        const input = document.getElementById(inputId);
+        const show = input.type === 'password';
+        input.type = show ? 'text' : 'password';
+        btn.textContent = show ? 'Masquer' : 'Afficher';
+    }
+
+    function openAuthModal(mode) {
+        currentMode = mode;
+        document.getElementById('auth-modal').classList.remove('hidden');
+        document.getElementById('auth-error').classList.add('hidden');
+        document.getElementById('auth-title').textContent = mode === 'login' ? 'Connexion' : 'Inscription';
+        document.getElementById('auth-submit-btn').textContent = mode === 'login' ? 'Se connecter' : "S'inscrire";
+        document.getElementById('auth-switch-text').textContent = mode === 'login' ? "Vous n'avez pas de compte ?" : "Vous avez déjà un compte ?";
+        document.getElementById('auth-switch-btn').textContent = mode === 'login' ? "S'inscrire" : "Se connecter";
+        document.getElementById('auth-password').setAttribute('autocomplete', mode === 'login' ? 'current-password' : 'new-password');
+        document.getElementById('auth-password').value = '';
+        setTimeout(() => document.getElementById('auth-username').focus(), 0);
+    }
+
+    function closeAuthModal() {
+        document.getElementById('auth-modal').classList.add('hidden');
+    }
+
+    function toggleAuthMode() {
+        openAuthModal(currentMode === 'login' ? 'signup' : 'login');
+    }
+
+    async function handleAuthSubmit(e) {
+        e.preventDefault();
+        const username = document.getElementById('auth-username').value.trim();
+        const password = document.getElementById('auth-password').value;
+        const errorDiv = document.getElementById('auth-error');
+        const fail = (text) => { errorDiv.textContent = text; errorDiv.classList.remove('hidden'); };
+
+        const users = getUsers();
+        const hashed = await hashPassword(password);
+
+        if (currentMode === 'signup') {
+            if (hasUser(users, username)) {
+                fail("Ce nom d'utilisateur existe déjà.");
                 return;
             }
-            const prompt = document.getElementById('prompt-input').value.trim();
-            const apiKe
+            users[username] = { password: hashed, creations: [], keys: { replicate: '', luma: '' } };
+            saveUsers(users);
+        } else {
+            if (!hasUser(users, username) || users[username].password !== hashed) {
+                fail("Nom d'utilisateur ou mot de passe incorrect.");
+                return;
+            }
+        }
+        currentUser = { username };
+        store.set('vidioai_session', currentUser);
+        document.getElementById('auth-username').value = '';
+        document.getElementById('auth-password').value = '';
+        closeAuthModal();
+        updateUI();
+    }
+
+    function logout() {
+        currentUser = null;
+        store.remove('vidioai_session');
+        document.getElementById('prompt-input').value = '';
+        hideGenStatus();
+        updateUI();
+        switchView('landing');
+    }
+
+    function switchView(viewName) {
+        if (!VIEWS.includes(viewName)) viewName = 'landing';
+        VIEWS.forEach(v => {
+            const el = document.getElementById('view-' + v);
+            if (el) el.classList.add('hidden');
+        });
+        const active = document.getElementById('view-' + viewName);
+        if (active) {
+            active.classList.remove('hidden', 'view-enter');
+            void active.offsetWidth;
+            active.classList.add('view-enter');
+            clearTimeout(viewTimer);
+            viewTimer = setTimeout(() => active.classList.remove('view-enter'), 900);
+        }
+        document.querySelectorAll('[data-nav]').forEach(b => b.classList.toggle('is-active', b.dataset.nav === viewName));
+        const tabs = ['generator', 'my-creations', 'pricing', 'settings'];
+        const tabIndex = tabs.indexOf(viewName);
+        const mobileNav = document.querySelector('.mobile-nav');
+        mobileNav.style.setProperty('--i', Math.max(tabIndex, 0));
+        mobileNav.style.setProperty('--on', tabIndex >= 0 ? 1 : 0);
+        if (viewName === 'my-creations') loadUserCreations();
+        if (viewName === 'settings') loadUserKeys();
+        window.scrollTo(0, 0);
+    }
+
+    // CRÉATIONS
+    function getCreations() {
+        if (!currentUser) return [];
+        const user = getUsers()[currentUser.username];
+        return (user && user.creations) || [];
+    }
+
+    function addCreation(creation) {
+        if (!currentUser) return;
+        const users = getUsers();
+        const user = users[currentUser.username];
+        if (!user) return;
+        user.creations = [creation].concat(user.creations || []);
+        saveUsers(users);
+    }
+
+    function deleteCreation(id) {
+        if (!currentUser) return;
+        const users = getUsers();
+        const user = users[currentUser.username];
+        if (!user) return;
+        user.creations = (user.creations || []).filter(c => c.id !== id);
+        saveUsers(users);
+        loadUserCreations();
+    }
+
+    function creationCard(c) {
+        const url = /^(https?:\/\/|\/videos\/)/i.test(c.videoUrl || '') ? c.videoUrl : '';
+        const media = url
+            ? `<video class="w-full h-full object-cover bg-black" src="${esc(url)}" controls playsinline preload="metadata"></video>`
+            : `<div class="thumb-placeholder"><svg class="icon" style="font-size:34px" aria-hidden="true"><use href="#i-play"/></svg></div>`;
+        const done = c.status === 'done';
+        const date = new Date(c.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+        return `
+            <article class="glass-card rounded-xl overflow-hidden flex flex-col min-w-0">
+                <div class="aspect-16-9 w-full bg-black">${media}</div>
+                <div class="p-4 space-y-3 flex-1 flex flex-col">
+                    <p class="text-sm text-white line-clamp-3 flex-1">${esc(c.prompt)}</p>
+                    <div class="flex items-center justify-between gap-3 text-[11px]">
+                        <div class="min-w-0 text-brand-graySub">
+                            <span class="font-semibold text-white">${esc(PROVIDERS[c.provider] || c.provider)}</span>
+                            <span> · ${esc(date)} · </span>
+                            <span class="${done ? 'text-green-400' : ''}">${done ? 'Terminée' : 'Aperçu'}</span>
+                        </div>
+                        <button type="button" onclick="deleteCreation('${esc(c.id)}')" class="text-brand-graySub hover:text-brand-red transition-colors p-1" aria-label="Supprimer cette création"><svg class="icon" style="font-size:16px" aria-hidden="true"><use href="#i-trash"/></svg></button>
+                    </div>
+                </div>
+            </article>`;
+    }
+
+    function loadUserCreations() {
+        const grid = document.getElementById('creations-grid');
+        if (!currentUser) {
+            grid.innerHTML = `
+                <div class="col-span-full glass-card rounded-xl p-8 text-center space-y-3">
+                    <p class="text-sm text-white">Connectez-vous pour retrouver vos créations.</p>
+                    <button type="button" onclick="openAuthModal('login')" class="bg-brand-red hover:bg-brand-redHover px-5 py-2 rounded-lg font-semibold text-xs text-white">Connexion</button>
+                </div>`;
+            return;
+        }
+        const list = getCreations();
+        if (!list.length) {
+            grid.innerHTML = `
+                <div class="col-span-full glass-card rounded-xl p-8 text-center space-y-3">
+                    <p class="text-sm text-white">Aucune création pour le moment.</p>
+                    <p class="text-xs text-brand-graySub">Vos vidéos générées apparaîtront ici.</p>
+                    <button type="button" onclick="switchView('generator')" class="bg-brand-red hover:bg-brand-redHover px-5 py-2 rounded-lg font-semibold text-xs text-white">Ouvrir le générateur</button>
+                </div>`;
+            return;
+        }
+        grid.innerHTML = list.map(creationCard).join('');
+    }
+
+    // GÉNÉRATION
+    function showGenStatus(text, kind, pct) {
+        const box = document.getElementById('gen-status');
+        box.classList.remove('hidden');
+        box.dataset.kind = kind;
+        document.getElementById('gen-status-text').textContent = text;
+        const wrap = document.getElementById('gen-progress-wrap');
+        wrap.classList.toggle('hidden', typeof pct !== 'number');
+        if (typeof pct === 'number') document.getElementById('gen-progress').style.width = pct + '%';
+        document.getElementById('gen-status-action').classList.toggle('hidden', kind !== 'success');
+    }
+
+    function hideGenStatus() {
+        document.getElementById('gen-status').classList.add('hidden');
+    }
+
+    async function apiFetch(path, options) {
+        const res = await fetch(apiBase + path, options);
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok || data.error) {
+            throw new Error(data.error || ("Le serveur a répondu avec l'erreur " + res.status + "."));
+        }
+        return data;
+    }
+
+    async function generateVideo() {
+        if (!currentUser) {
+            openAuthModal('login');
+            return;
+        }
+        if (generating) return;
+
+        const prompt = document.getElementById('prompt-input').value.trim();
+        const apiKey = document.getElementById('api-key-input').value.trim();
+        const provider = selectedProvider;
+        const name = PROVIDERS[provider];
+
+        if (!prompt) {
+            showGenStatus('Décrivez la vidéo que vous voulez générer.', 'error');
+            return;
+        }
+        if (!apiKey) {
+            showGenStatus('Ajoutez votre clé API ' + name + ' pour continuer.', 'error');
+            return;
+        }
+
+        saveKey(provider, apiKey);
+
+        const btn = document.getElementById('generate-btn');
+        generating = true;
+        btn.disabled = true;
+        btn.classList.add('opacity-60');
+        showGenStatus('Préparation…', 'info', 3);
+
+        const creation = {
+            id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+            provider: provider,
+            prompt: prompt,
+            createdAt: Date.now(),
+            status: 'preview',
+            videoUrl: ''
+        };
+
+        try {
+            await backendReady;
+            if (apiBase !== null) {
+                showGenStatus('Envoi du prompt à ' + name + '…', 'info', 8);
+                const job = await apiFetch('/api/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ provider: provider, api_key: apiKey, prompt: prompt })
+                });
+                const startedAt = Date.now();
+                for (;;) {
+                    await sleep(4000);
+                    const elapsed = (Date.now() - startedAt) / 1000;
+                    if (elapsed > 600) throw new Error('La génération prend trop de temps. Réessayez dans quelques minutes.');
+                    const state = await apiFetch('/api/status?provider=' + encodeURIComponent(provider) + '&id=' + encodeURIComponent(job.id), {
+                        headers: { 'X-API-Key': apiKey }
+                    });
+                    if (state.status === 'done') {
+                        const link = state.video_url || '';
+                        creation.videoUrl = link.charAt(0) === '/' ? apiBase + link : link;
+                        creation.status = 'done';
+                        break;
+                    }
+                    const label = state.status === 'queued' ? "En file d'attente chez " : 'Rendu en cours chez ';
+                    showGenStatus(label + name + '… cela peut prendre une à deux minutes.', 'info', Math.min(92, 12 + elapsed * 0.8));
+                }
+                addCreation(creation);
+                showGenStatus('Votre vidéo est prête.', 'success', 100);
+            } else {
+                const steps = [
+                    ['Envoi du prompt à ' + name + '…', 15],
+                    ["Mise en file d'attente…", 40],
+                    ['Rendu des images…', 75],
+                    ['Finalisation…', 95]
+                ];
+                for (const step of steps) {
+                    showGenStatus(step[0], 'info', step[1]);
+                    await sleep(700);
+                }
+                addCreation(creation);
+                showGenStatus("Simulation terminée. Aucune vidéo n'a été produite : l'entrée a été ajoutée à vos créations en mode aperçu.", 'success', 100);
+            }
+            loadUserCreations();
+        } catch (err) {
+            const offline = err instanceof TypeError;
+            const message = offline
+                ? 'Impossible de joindre le serveur. Vérifiez votre connexion.'
+                : (err && err.message ? err.message : 'La génération a échoué. Vérifiez votre clé et réessayez.');
+            showGenStatus(message, 'error');
+        } finally {
+            generating = false;
+            btn.disabled = false;
+            btn.classList.remove('opacity-60');
+        }
+    }
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeAuthModal();
+    });
+
+    // Reflet du verre qui suit le pointeur (souris uniquement)
+    if (window.matchMedia && matchMedia('(hover: hover)').matches) {
+        document.addEventListener('pointermove', function (e) {
+            const card = e.target.closest ? e.target.closest('.glass-card') : null;
+            if (!card) return;
+            const r = card.getBoundingClientRect();
+            card.style.setProperty('--mx', (e.clientX - r.left) + 'px');
+            card.style.setProperty('--my', (e.clientY - r.top) + 'px');
+        }, { passive: true });
+    }
+
+    // DÉMARRAGE
+    if (currentUser && !hasUser(getUsers(), currentUser.username)) {
+        currentUser = null;
+        store.remove('vidioai_session');
+    }
+    selectProvider('replicate');
+    updateUI();
+    switchView('landing');
+</script>
+</body>
+</html>
