@@ -22,9 +22,12 @@ VIDEO_DIR.mkdir(exist_ok=True)
 
 # Réglages (modifiables par variables d'environnement)
 REPLICATE_MODEL = os.environ.get("REPLICATE_MODEL", "wan-video/wan-2.2-t2v-fast")
-LUMA_MODEL = os.environ.get("LUMA_MODEL", "ray-flash-2")
+LUMA_MODEL = os.environ.get("LUMA_MODEL", "ray-3.2")
 LUMA_RESOLUTION = os.environ.get("LUMA_RESOLUTION", "720p")
 LUMA_DURATION = os.environ.get("LUMA_DURATION", "5s")
+LUMA_ASPECT_RATIO = os.environ.get("LUMA_ASPECT_RATIO", "16:9")
+# Anciennes clés Dream Machine (ancienne API Luma, encore acceptées si elles fonctionnent)
+LUMA_LEGACY_MODEL = os.environ.get("LUMA_LEGACY_MODEL", "ray-flash-2")
 ALLOWED_ORIGINS = {o.strip().rstrip("/") for o in os.environ.get("ALLOWED_ORIGIN", "").split(",") if o.strip()}
 
 MAX_PROMPT_LENGTH = 1000
@@ -161,23 +164,40 @@ def replicate_status(api_key, job_id):
     return {"status": "queued" if status == "starting" else "processing"}
 
 
+LUMA_NEW_URL = "https://agents.lumalabs.ai/v1/generations"
+LUMA_OLD_URL = "https://api.lumalabs.ai/dream-machine/v1/generations"
+
+
+def luma_is_new(api_key):
+    """Les clés de platform.lumalabs.ai commencent par luma-api- et utilisent la nouvelle API."""
+    return api_key.startswith("luma-api-")
+
+
 def luma_create(api_key, prompt):
-    response = call(
-        "POST",
-        "https://api.lumalabs.ai/dream-machine/v1/generations",
-        "Luma AI",
-        headers={**auth(api_key), "Content-Type": "application/json", "Accept": "application/json"},
-        json={"prompt": prompt, "model": LUMA_MODEL, "resolution": LUMA_RESOLUTION, "duration": LUMA_DURATION},
-    )
+    headers = {**auth(api_key), "Content-Type": "application/json", "Accept": "application/json"}
+    if luma_is_new(api_key):
+        url = LUMA_NEW_URL
+        body = {
+            "model": LUMA_MODEL,
+            "type": "video",
+            "prompt": prompt,
+            "aspect_ratio": LUMA_ASPECT_RATIO,
+            "video": {"resolution": LUMA_RESOLUTION, "duration": LUMA_DURATION},
+        }
+    else:
+        url = LUMA_OLD_URL
+        body = {"prompt": prompt, "model": LUMA_LEGACY_MODEL, "resolution": LUMA_RESOLUTION, "duration": LUMA_DURATION}
+    response = call("POST", url, "Luma AI", headers=headers, json=body)
     if response.status_code not in (200, 201):
         raise upstream_error("Luma AI", response)
     return read_json(response, "Luma AI").get("id")
 
 
 def luma_status(api_key, job_id):
+    new = luma_is_new(api_key)
     response = call(
         "GET",
-        "https://api.lumalabs.ai/dream-machine/v1/generations/" + job_id,
+        (LUMA_NEW_URL if new else LUMA_OLD_URL) + "/" + job_id,
         "Luma AI",
         headers={**auth(api_key), "Accept": "application/json"},
     )
@@ -186,12 +206,20 @@ def luma_status(api_key, job_id):
     data = read_json(response, "Luma AI")
     state = data.get("state")
     if state == "completed":
-        video = (data.get("assets") or {}).get("video")
+        if new:
+            outputs = data.get("output") if isinstance(data.get("output"), list) else []
+            video = next(
+                (o.get("url") for o in outputs
+                 if isinstance(o, dict) and o.get("type") == "video" and isinstance(o.get("url"), str)),
+                None,
+            )
+        else:
+            video = (data.get("assets") or {}).get("video")
         if not isinstance(video, str):
             return {"status": "failed", "error": "Luma AI n'a renvoyé aucune vidéo."}
         return {"status": "done", "source": video}
     if state == "failed":
-        reason = str(data.get("failure_reason") or "raison inconnue")
+        reason = str(data.get("failure_reason") or data.get("failure_code") or "raison inconnue")
         return {"status": "failed", "error": "La génération a échoué chez Luma AI : " + reason[:200]}
     return {"status": "queued" if state == "queued" else "processing"}
 

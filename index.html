@@ -523,7 +523,7 @@
                     <button type="button" id="btn-provider-luma" aria-pressed="false" onclick="selectProvider('luma')" class="p-4 rounded-xl border border-brand-border bg-brand-black/50 flex items-center justify-between gap-3 text-left transition-all hover:border-brand-graySub">
                         <div class="min-w-0">
                             <div class="font-bold text-sm text-white">Luma AI (Lunalabs)</div>
-                            <div class="text-[11px] text-brand-graySub">Moteur Dream Machine cinématique de haute qualité</div>
+                            <div class="text-[11px] text-brand-graySub">Modèle Ray 3.2 de Luma, rendu cinématique</div>
                         </div>
                         <svg id="icon-luma" class="icon text-brand-graySub" style="font-size:18px" aria-hidden="true"><use href="#i-circle"/></svg>
                     </button>
@@ -532,7 +532,7 @@
                 <!-- Input Clé API contextuel -->
                 <div class="pt-2">
                     <label id="key-label" for="api-key-input" class="block text-xs font-medium text-brand-graySub mb-1">Clé API Replicate (ex: r8_...)</label>
-                    <input type="password" id="api-key-input" autocomplete="off" placeholder="Entrez votre clé d'accès (ex: r8_... ou luma-...)" class="w-full bg-brand-black border border-brand-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-red">
+                    <input type="password" id="api-key-input" autocomplete="off" placeholder="Entrez votre clé d'accès (ex: r8_... ou luma-api-...)" class="w-full bg-brand-black border border-brand-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-red">
                     <p class="text-[10px] text-brand-graySub mt-1">La clé est enregistrée sur votre compte localement.</p>
                 </div>
 
@@ -617,7 +617,7 @@
                 <div>
                     <label for="settings-key-luma" class="block text-xs font-medium text-brand-graySub mb-1">Clé API Luma AI (Lunalabs)</label>
                     <div class="flex gap-2">
-                        <input type="password" id="settings-key-luma" autocomplete="off" placeholder="luma-..." class="min-w-0 flex-1 bg-brand-black border border-brand-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-red">
+                        <input type="password" id="settings-key-luma" autocomplete="off" placeholder="luma-api-..." class="min-w-0 flex-1 bg-brand-black border border-brand-border rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-red">
                         <button type="button" onclick="toggleReveal('settings-key-luma', this)" class="shrink-0 text-xs font-medium text-brand-graySub hover:text-white border border-brand-border rounded-lg px-3">Afficher</button>
                     </div>
                 </div>
@@ -758,7 +758,7 @@
         setIcon(iconRep, isRep);
         setIcon(iconLuma, !isRep);
         iconRep.style.fontSize = iconLuma.style.fontSize = '18px';
-        keyLabel.textContent = isRep ? 'Clé API Replicate (ex: r8_...)' : 'Clé API Luma AI / Lunalabs (ex: luma-...)';
+        keyLabel.textContent = isRep ? 'Clé API Replicate (ex: r8_...)' : 'Clé API Luma AI (ex: luma-api-...)';
         providerName.textContent = PROVIDERS[provider];
         loadUserKeys();
     }
